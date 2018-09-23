@@ -2,7 +2,7 @@ desc = """Animations of binary black hole scattering.
 Generates an animation of a binary black hole merger and the final remnant.
 
 Example usage:
-python black_hole_scattering.py --q 2 --omega0 1.8e-2 --chiA0 0.2 0.7 -0.1 --chiB0 0.2 0.6 0.1
+python black_hole_scattering.py --q 2 --omega_ref 1.8e-2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
@@ -12,6 +12,7 @@ After the merger each frame corresponds to a time step of 100M.
 import numpy as np
 import matplotlib.pyplot as P
 import argparse
+import time
 
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -26,7 +27,7 @@ from matplotlib.patches import FancyArrowPatch
 
 P.style.use('seaborn')
 
-colors_dict ={
+colors_dict = {
         'BhA_traj': 'indianred',
         'BhB_traj': 'rebeccapurple',
         'BhA_spin': 'goldenrod',
@@ -34,15 +35,23 @@ colors_dict ={
         'BhC_spin': 'forestgreen',
         }
 
+# number of frames per orbit
+pts_per_orbit = 30
+
+# Time at which to freeze video for 5 seconds
+freeze_time = -100
 
 class Arrow3D(FancyArrowPatch):
     def __init__(self, vecs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0,0), (0,0), *args, **kwargs)
         self._verts3d = vecs
 
-    def set_BH_spin_arrow(self, Bh_loc, chi_vec, scale_factor=12):
+    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=25):
+        """ The length of the arrow is proportinal to the Kerr parameter
+        a of the BH.
+        """
         x, y, z =  Bh_loc
-        u, v, w =  chi_vec
+        u, v, w =  chi_vec*mass
         xs = [x, x+u*scale_factor]
         ys = [y, y+v*scale_factor]
         zs = [z, z+w*scale_factor]
@@ -181,14 +190,32 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
 
 
 #----------------------------------------------------------------------------
+def make_zero_if_small(x):
+    if abs(x) < 1e-3:
+        return 0
+    else:
+        return x
+
+#----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
-        dataLines_remnant, time_text, properties_text, \
+        dataLines_remnant, time_text, properties_text, freeze_text, \
         BhA_traj, BhB_traj, BhC_traj, \
-        q, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx):
+        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, freeze_idx):
     """ The function that goes into animation
     """
     current_time = t[num]
     time_text.set_text('$t=%.1f\,M$'%current_time)
+
+
+    if num == freeze_idx:
+        # Add text about freezing before freezing
+        freeze_text.set_text('Freezing video')
+    if num == freeze_idx+1:
+        time.sleep(5)
+        # Clear text about freezing after freezing
+        freeze_text.set_text('')
+
+
     if current_time < 0:
 
         if num < 2:
@@ -200,11 +227,15 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
             line.reset()
 
         for idx in range(len(dataLines_binary)):
-            properties_text.set_text('$q=%.1f$\n' \
+            properties_text.set_text('$q=%.2f$\n' \
                 '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
                 '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
-                chiA_nrsur[num-1][0],chiA_nrsur[num-1][1],chiA_nrsur[num-1][2],\
-                chiB_nrsur[num-1][0],chiB_nrsur[num-1][1],chiB_nrsur[num-1][2],\
+                make_zero_if_small(chiA_nrsur[num-1][0]), \
+                make_zero_if_small(chiA_nrsur[num-1][1]), \
+                make_zero_if_small(chiA_nrsur[num-1][2]), \
+                make_zero_if_small(chiB_nrsur[num-1][0]), \
+                make_zero_if_small(chiB_nrsur[num-1][1]), \
+                make_zero_if_small(chiB_nrsur[num-1][2]), \
                 ))
 
             line = lines[idx]
@@ -224,11 +255,13 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 if idx == 4:
                     Bh_loc = BhA_traj[:,num-1]
                     chi_vec = chiA_nrsur[num-1]
+                    mass = mA
                 elif idx == 5:
                     Bh_loc = BhB_traj[:,num-1]
                     chi_vec = chiB_nrsur[num-1]
+                    mass = mB
 
-                line.set_BH_spin_arrow(Bh_loc, chi_vec)
+                line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
     else:
         num = num - zero_idx + 1    # Ignore first index to avoid glitch
         if num < 2:
@@ -258,36 +291,51 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
             else:
                 Bh_loc = BhC_traj[:,num-1]
                 chi_vec = chif
-                line.set_BH_spin_arrow(Bh_loc, chi_vec)
+                mass = mf
+                line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
 
     return lines
 
 
 #----------------------------------------------------------------------------
-def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
+def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
 
-    chiA0 = np.array(chiA0)
-    chiB0 = np.array(chiB0)
+    chiA = np.array(chiA)
+    chiB = np.array(chiB)
 
     # evaluate remnant fit
     fit_name = 'surfinBH7dq2'
     fit = surfinBH.LoadFits(fit_name)
+
+    # If omega_ref is None, will assume the spins are given in the
+    # coorbital frame at t=-100M
     mf, chif, vf, mf_err, chif_err, vf_err \
-        = fit.all(q, chiA0, chiB0, omega0=omega0)
+        = fit.all(q, chiA, chiB, omega0=omega_ref)
+
+    print np.linalg.norm(chif)
+    print np.linalg.norm(vf)
+    print np.linalg.norm(vf) * 3 * 10**5
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
 
     nr_sur = NRSur7dq2.NRSurrogate7dq2()
 
+    # If omega_ref is not given, set f_ref to None, and t_ref to -100
+    f_ref = None if omega_ref is None else omega_ref/np.pi
+    t_ref = -100 if omega_ref is None else None
+
     # get NRSur dynamics
     quat_nrsur, orbphase_nrsur, _, _ \
-        = nr_sur.get_dynamics(q, chiA0, chiB0, omega_ref=omega0, \
+        = nr_sur.get_dynamics(q, chiA, chiB, omega_ref=omega_ref, t_ref=t_ref, \
         allow_extrapolation=True)
 
-    pts_per_orbit = 30
     t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
         pts_per_orbit)
+
+    # If freeze_time is not in t_binary, add it
+    if np.min(np.abs(t_binary - freeze_time)) > 0.1:
+        t_binary = np.sort(np.append(t_binary, freeze_time))
 
     # interpolate dynamics on to t_binary
     quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
@@ -296,9 +344,9 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
 
     omega_nrsur = get_omegaOrb_from_sparse_data(t_binary, orbphase_nrsur)
 
-    h_nrsur, chiA_nrsur, chiB_nrsur = nr_sur(q, chiA0, chiB0, \
-        f_ref=omega0/np.pi, return_spins=True, allow_extrapolation=True, LMax=2,
-        t=t_binary)
+    h_nrsur, chiA_nrsur, chiB_nrsur = nr_sur(q, chiA, chiB, \
+        f_ref=f_ref, t_ref=t_ref, return_spins=True, \
+        allow_extrapolation=True, LMax=2, t=t_binary)
 
     LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
     separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
@@ -318,13 +366,16 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
     fig = P.figure(figsize=(5,4))
     ax = axes3d.Axes3D(fig)
 
-    markersize_BhA = get_marker_size(mA, chiA0)
-    markersize_BhB = get_marker_size(mB, chiB0)
+    markersize_BhA = get_marker_size(mA, chiA)
+    markersize_BhB = get_marker_size(mB, chiB)
     markersize_BhC = get_marker_size(mf, chif)
 
     time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, fontsize=12)
     properties_text = ax.text2D(0.05, 0.8, '', transform=ax.transAxes, \
         fontsize=10)
+    freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, fontsize=14,
+            color='tomato')
+    
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
     dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1]
@@ -368,13 +419,12 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
 
     # Setting the axes properties
     ax.set_xlim3d([-max_range, max_range])
-    ax.set_xlabel('X')
-
     ax.set_ylim3d([-max_range, max_range])
-    ax.set_ylabel('Y')
-
     ax.set_zlim3d([-max_range, max_range])
-    ax.set_zlabel('Z')
+
+    ax.set_xlabel('$x\,(M)$', fontsize=10)
+    ax.set_ylabel('$y\,(M)$', fontsize=10)
+    ax.set_zlabel('$z\,(M)$', fontsize=10)
 
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
@@ -396,23 +446,30 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
 
     ax.xaxis.labelpad = 0
     ax.yaxis.labelpad = 0
-    ax.zaxis.labelpad = -1
+    ax.zaxis.labelpad = -3
 
-    ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=14, x=0.75, y=0.99)
+    ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=14, x=0.74, y=0.99)
 
     # number of frames to include in orbit trace
     hist_frames = int(3./4*(pts_per_orbit))
 
-    zero_idx = np.argmin(np.abs(t_binary))
-
     # common time array
-    t = np.append(t_binary[:zero_idx], t_remnant)
+    t = np.append(t_binary[t_binary<0], t_remnant)
+
+    # Will switch to remant after this index
+    zero_idx = np.argmin(np.abs(t))
+
+    # Will freeze for 5 seconds at this index
+    freeze_idx = np.argmin(np.abs(t - freeze_time))
+
 
     #NOTE: There is a glitch if I don't skip the first index
     line_ani = animation.FuncAnimation(fig, update_lines, range(1, len(t)), \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
-            time_text, properties_text, BhA_traj, BhB_traj, BhC_traj, \
-            q, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx), \
+            time_text, properties_text, freeze_text, \
+            BhA_traj, BhB_traj, BhC_traj, \
+            q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, \
+            freeze_idx), \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
     if return_fig:
@@ -426,14 +483,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=desc,
         formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--omega0', type=float, required=True,
-        help='Starting orbital frequency. Currently, > 0.018.')
     parser.add_argument('--q', type=float, required=True,
         help='Mass ratio.')
-    parser.add_argument('--chiA0', type=float, required=True, nargs=3,
-        help='Spin of BhA at omega0. Array of size 3.')
-    parser.add_argument('--chiB0', type=float, required=True, nargs=3,
-        help='Spin of BhB at omega0. Array of size 3.')
+    parser.add_argument('--chiA', type=float, required=True, nargs=3,
+        help='Spin of BhA at omega_ref. Array of size 3.')
+    parser.add_argument('--chiB', type=float, required=True, nargs=3,
+        help='Spin of BhB at omega_ref. Array of size 3.')
+    parser.add_argument('--omega_ref', type=float, default=None,
+        help='Starting orbital frequency at which the spins are specified. ' \
+            'Currently, > 0.018. If not specified, assumes the spins are ' \
+            'specified at t=-100M from the peak of the waveform.')
     parser.add_argument('--save_file', type=str, default=None,
         help='File (without extension) to save animation to. If given, will' \
             ' save animation to this file. Else will show animation.')
@@ -441,8 +500,8 @@ if __name__ == '__main__':
         help='Format for video file, mp4 or gif.')
 
     args = parser.parse_args()
-    line_ani, fig = BBH_scattering(args.q, args.chiA0, args.chiB0, \
-        args.omega0, return_fig=True)
+    line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
+        args.omega_ref, return_fig=True)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
