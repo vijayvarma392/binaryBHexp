@@ -1,2 +1,2 @@
-# surfinBH_animation
-An interactive demo of the surfinBH package
+# black hole scattering
+Visualization of the binary black hole scattering process
