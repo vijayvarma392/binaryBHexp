@@ -18,7 +18,6 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 import surfinBH
 import NRSur7dq2
-from gwtools import rotations
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
@@ -301,7 +300,7 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
         f_ref=omega0/np.pi, return_spins=True, allow_extrapolation=True, LMax=2,
         t=t_binary)
 
-    LHat = rotations.lHat_from_quat(quat_nrsur).T
+    LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
     separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
         chiB_nrsur, LHat)
 
