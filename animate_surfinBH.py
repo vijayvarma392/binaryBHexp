@@ -18,7 +18,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 import surfinBH
 import NRSur7dq2
-#from gwtools import rotations
+from gwtools import rotations
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
@@ -89,8 +89,6 @@ def get_trajectory(separation, quat_nrsur, orbphase_nrsur, bh_label):
     the coprecessing frame quaternion and orbital phase in the coprecessing
     frame.
     """
-    #FIXME COM should not be equidistant from both BHs
-
     if bh_label == 'A':
         offset = 0
     else:
@@ -136,21 +134,52 @@ def get_omegaOrb_from_sparse_data(t_sparse, phiOrb_sparse):
     return omegaOrb_spl(t_sparse)
 
 #----------------------------------------------------------------------------
-def get_separation_from_omega(omega):
-    """ Let's do zeroth order approx: Keppler's law """
-    separation = omega**(-2./3)
-    return separation
-
+def get_marker_size(mass, chi):
+    """ Marker size proportional to the Kerr horizon radius """
+    chimag = np.sqrt(np.sum(chi**2))
+    rplus = mass + mass*np.sqrt(1 - chimag**2)
+    return rplus * 30
 
 #----------------------------------------------------------------------------
-def get_quivers(Bh_loc, chi_vec, scale_factor=10):
-    """ Gets quivers for spins on a BH
-    """
-    X, Y, Z =  Bh_loc
-    u, v, w =  chi_vec
-    segments = (X, Y, Z, X+u*scale_factor, Y+v*scale_factor, Z+w*scale_factor)
-    segments = np.array(segments).reshape(6,-1)
-    return [[[x, y, z], [u, v, w]] for x, y, z, u, v, w in zip(*list(segments))]
+def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
+    """ Roughly 3.5 PN accurate separation. This is not verified or tested,
+    so don't use this for real science, only visualization. """
+
+    eta = mA*mB
+    deltaM = mA - mB
+
+    Sigma_vec = mB*chiB - mA*chiA
+    S_vec = mA**2.*chiA + mB**2.*chiB
+
+    # some dot products
+    chiAL = np.sum(LHat*chiA, axis=1)
+    chiBL = np.sum(LHat*chiB, axis=1)
+    chiAB = np.sum(chiA*chiB, axis=1)
+    SigmaL = np.sum(Sigma_vec*LHat, axis=1)
+    SL = np.sum(S_vec*LHat, axis=1)
+
+
+    # Get 3.5 PN accurate gamma=1./r from Eq.(4.3) of
+    # https://arxiv.org/pdf/1212.5520v2.pdf, but ignore the
+    # log term in x**3 term
+    x = omega**(2./3.)
+    gamma = x * ( 1 + x * (1. - 1./3 *eta) \
+            + x**(3./2) * (5./3 * SL + deltaM * SigmaL ) \
+            + x**2 * (1 - 65./12 *eta) \
+            + x**(5./2) * ( (10./3 + 8./9 * eta)*SL + 2* deltaM * SigmaL) \
+            + x**3 * (1. + (-2203./2520 -41./192 * np.pi**2)*eta \
+                + 229./36 * eta**2 + 1./81 * eta**3) \
+            + x**(7./2) * ( (5 - 127./12 *eta - 6 * eta**2)*SL + \
+                deltaM * SigmaL * (3 - 61./6 *eta - 8./3 * eta**2) ) \
+            )
+    r = 1/gamma
+
+    # To this add the 2PN spin-spin term from Eq.(4.13) of
+    # https://arxiv.org/pdf/gr-qc/9506022.pdf
+    r += omega**(-2./3) * (-1./2 * eta * chiAB) * omega**(4./3)
+
+    return r
+
 
 #----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
@@ -272,12 +301,13 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
         f_ref=omega0/np.pi, return_spins=True, allow_extrapolation=True, LMax=2,
         t=t_binary)
 
-    #LHat = rotations.lHat_from_quat(quat_nrsur)
+    LHat = rotations.lHat_from_quat(quat_nrsur).T
+    separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
+        chiB_nrsur, LHat)
 
-    separation = get_separation_from_omega(omega_nrsur)
+    # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
     BhB_traj = get_trajectory(separation * mA, quat_nrsur, orbphase_nrsur, 'B')
-
 
     # time array for remnant
     t_remnant = np.arange(0, 10000, 100)
@@ -289,10 +319,9 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
     fig = P.figure(figsize=(5,4))
     ax = axes3d.Axes3D(fig)
 
-    # FIXME check that this makes sense
-    markersize_BhA = mA*50
-    markersize_BhB = mB*50
-    markersize_BhC = mf*50
+    markersize_BhA = get_marker_size(mA, chiA0)
+    markersize_BhB = get_marker_size(mB, chiB0)
+    markersize_BhC = get_marker_size(mf, chif)
 
     time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, fontsize=12)
     properties_text = ax.text2D(0.05, 0.8, '', transform=ax.transAxes, \
@@ -348,11 +377,6 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
     ax.set_zlim3d([-max_range, max_range])
     ax.set_zlabel('Z')
 
-    #ax.xaxis.pane.fill = False
-    #ax.yaxis.pane.fill = False
-    #ax.zaxis.pane.fill = False
-
-    #ax.grid(False)
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
     ax.zaxis.pane.set_edgecolor('black')
@@ -375,13 +399,10 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
     ax.yaxis.labelpad = 0
     ax.zaxis.labelpad = -1
 
-
-
     ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=14, x=0.75, y=0.99)
 
-    # Creating the Animation object
-    hist_frames = 15
-
+    # number of frames to include in orbit trace
+    hist_frames = int(3./4*(pts_per_orbit))
 
     zero_idx = np.argmin(np.abs(t_binary))
 
