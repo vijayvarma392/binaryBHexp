@@ -192,7 +192,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
     time_text.set_text('$t=%.1f\,M$'%current_time)
     if current_time < 0:
 
-        if num == 0:
+        if num < 2:
             # Clear remnant stuff
             line = lines[6]
             line.set_data([], [])
@@ -231,8 +231,8 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
                 line.set_BH_spin_arrow(Bh_loc, chi_vec)
     else:
-        num = num - zero_idx
-        if num == 0:
+        num = num - zero_idx + 1    # Ignore first index to avoid glitch
+        if num < 2:
             # Clear binary stuff
             for idx in range(4):
                 line = lines[idx]
@@ -409,7 +409,8 @@ def BBH_scattering(q, chiA0, chiB0, omega0, return_fig=False):
     # common time array
     t = np.append(t_binary[:zero_idx], t_remnant)
 
-    line_ani = animation.FuncAnimation(fig, update_lines, len(t), \
+    #NOTE: There is a glitch if I don't skip the first index
+    line_ani = animation.FuncAnimation(fig, update_lines, range(1, len(t)), \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, BhA_traj, BhB_traj, BhC_traj, \
             q, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx), \
