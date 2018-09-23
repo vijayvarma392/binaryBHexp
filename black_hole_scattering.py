@@ -7,12 +7,20 @@ python black_hole_scattering.py --q 2 --omega_ref 1.8e-2 --chiA 0.2 0.7 -0.1 --c
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
 After the merger each frame corresponds to a time step of 100M.
+
+The precessing frame quaternion and phase is obtained from NRSur7dq2.
+The seperation is estimated from 3.5PN relation between r and omega, and omega
+is obtained from NRSur7dq2.
+The remnant properties are obtained from surfinBH.
+
+Links:
+NRSur7dq2: https://pypi.org/project/NRSur7dq2/
+surfinBH: https://pypi.org/project/surfinBH/
 """
 
 import numpy as np
 import matplotlib.pyplot as P
 import argparse
-import time
 
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -33,6 +41,7 @@ colors_dict = {
         'BhA_spin': 'goldenrod',
         'BhB_spin': 'steelblue',
         'BhC_spin': 'forestgreen',
+        'LHat': 'orchid',
         }
 
 # number of frames per orbit
@@ -55,6 +64,15 @@ class Arrow3D(FancyArrowPatch):
         xs = [x, x+u*scale_factor]
         ys = [y, y+v*scale_factor]
         zs = [z, z+w*scale_factor]
+        self._verts3d = xs, ys, zs
+
+    def set_angular_momentum_arrow(self, LHat, scale_factor=15):
+        """ Place the base at center and point in the direction of the
+        instantaneous angular momentum direction.
+        """
+        xs = [0, LHat[0]*scale_factor]
+        ys = [0, LHat[1]*scale_factor]
+        zs = [0, LHat[2]*scale_factor]
         self._verts3d = xs, ys, zs
 
     def reset(self):
@@ -199,19 +217,19 @@ def make_zero_if_small(x):
 #----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
-        BhA_traj, BhB_traj, BhC_traj, \
-        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, freeze_idx):
+        BhA_traj, BhB_traj, BhC_traj, LHat, \
+        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, \
+        freeze_idx, draw_full_trajectory):
     """ The function that goes into animation
     """
     current_time = t[num]
     time_text.set_text('$t=%.1f\,M$'%current_time)
 
 
-    if num == freeze_idx:
+    if num == freeze_idx - 1:
         # Add text about freezing before freezing
         freeze_text.set_text('Freezing video')
-    if num == freeze_idx+1:
-        time.sleep(5)
+    if num == freeze_idx + 1:
         # Clear text about freezing after freezing
         freeze_text.set_text('')
 
@@ -220,10 +238,10 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
         if num < 2:
             # Clear remnant stuff
-            line = lines[6]
+            line = lines[len(dataLines_binary)]
             line.set_data([], [])
             line.set_3d_properties([])
-            line = lines[7]
+            line = lines[len(dataLines_binary)+1]
             line.reset()
 
         for idx in range(len(dataLines_binary)):
@@ -244,7 +262,10 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
             if idx < 4:
                 if idx < 2:
-                    start = max(0, num-hist_frames)
+                    if draw_full_trajectory:
+                        start = 0
+                    else:
+                        start = max(0, num-hist_frames)
                 else:
                     start = max(0, num-1)
 
@@ -253,15 +274,14 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 line.set_3d_properties(data[2, start:num])
             else:
                 if idx == 4:
-                    Bh_loc = BhA_traj[:,num-1]
-                    chi_vec = chiA_nrsur[num-1]
-                    mass = mA
+                    line.set_BH_spin_arrow(BhA_traj[:,num-1], mA, \
+                        chiA_nrsur[num-1])
                 elif idx == 5:
-                    Bh_loc = BhB_traj[:,num-1]
-                    chi_vec = chiB_nrsur[num-1]
-                    mass = mB
+                    line.set_BH_spin_arrow(BhB_traj[:,num-1], mB, \
+                        chiB_nrsur[num-1])
+                elif idx == 6:
+                    line.set_angular_momentum_arrow(LHat.T[:,num-1])
 
-                line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
     else:
         num = num - zero_idx + 1    # Ignore first index to avoid glitch
         if num < 2:
@@ -270,7 +290,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 line = lines[idx]
                 line.set_data([], [])
                 line.set_3d_properties([])
-            for idx in range(4,6):
+            for idx in range(4,7):
                 line = lines[idx]
                 line.reset()
 
@@ -281,7 +301,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         for idx in range(len(dataLines_remnant)):
-            line = lines[6+idx]
+            line = lines[len(dataLines_binary)+idx]
             data = dataLines_remnant[idx]
 
             if idx == 0:
@@ -298,7 +318,8 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
 
 #----------------------------------------------------------------------------
-def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
+def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
+        return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -312,9 +333,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
     mf, chif, vf, mf_err, chif_err, vf_err \
         = fit.all(q, chiA, chiB, omega0=omega_ref)
 
-    print np.linalg.norm(chif)
-    print np.linalg.norm(vf)
-    print np.linalg.norm(vf) * 3 * 10**5
+    #print np.linalg.norm(chif)
+    #print np.linalg.norm(vf)
+    #print np.linalg.norm(vf) * 3 * 10**5
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
@@ -375,10 +396,10 @@ def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
         fontsize=10)
     freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, fontsize=14,
             color='tomato')
-    
+
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
-    dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1]
+    dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1, 1]
 
     marker_alpha = 0.9
     traj_alpha = 0.8
@@ -402,6 +423,10 @@ def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
             color=colors_dict['BhA_spin'])), \
         ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
             color=colors_dict['BhB_spin'])), \
+
+        # This is for plotting angular momentum direction
+        ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
+            color=colors_dict['LHat'])), \
 
         # This is for plotting remnant BH
         ax.plot(BhC_traj[0,0:1]-1e10, BhC_traj[1,0:1], BhC_traj[2,0:1], \
@@ -464,12 +489,17 @@ def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
 
 
     #NOTE: There is a glitch if I don't skip the first index
-    line_ani = animation.FuncAnimation(fig, update_lines, range(1, len(t)), \
+    frames = range(1, len(t))
+    # Repeat freeze_idx 100 times, this is a hacky way to freeze the video
+    # here
+    frames = np.sort(np.append(frames, [freeze_idx]*75))
+
+    line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, freeze_text, \
-            BhA_traj, BhB_traj, BhC_traj, \
+            BhA_traj, BhB_traj, BhC_traj, LHat, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, \
-            freeze_idx), \
+            freeze_idx, draw_full_trajectory), \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
     if return_fig:
@@ -482,7 +512,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, return_fig=False):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=desc,
-        formatter_class=argparse.RawTextHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--q', type=float, required=True,
         help='Mass ratio.')
     parser.add_argument('--chiA', type=float, required=True, nargs=3,
@@ -494,26 +524,30 @@ if __name__ == '__main__':
             'Currently, > 0.018. If not specified, assumes the spins are ' \
             'specified at t=-100M from the peak of the waveform.')
     parser.add_argument('--save_file', type=str, default=None,
-        help='File (without extension) to save animation to. If given, will' \
-            ' save animation to this file. Else will show animation.')
-    parser.add_argument('--save_format', type=str, default='mp4',
-        help='Format for video file, mp4 or gif.')
+        help='File to save animation to. If given, will save animation to ' \
+                'this file. Else will show animation. Allowed extensions are ' \
+                'mp4 and gif.')
+    parser.add_argument('--draw_full_trajectory', default=False, \
+        action='store_true', \
+        help='If given, draws the entire trajectories of the components. ' \
+        'Else only retains the last 3/4th of an orbit.')
 
     args = parser.parse_args()
     line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
-        args.omega_ref, return_fig=True)
+        args.omega_ref, args.draw_full_trajectory, return_fig=True)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
 
-        if args.save_format == 'mp4':
+        extension = args.save_file.split('.')[-1]
+        if extension == 'mp4':
             # Might need: conda install -c conda-forge ffmpeg
             Writer = animation.writers['ffmpeg']
-        elif args.save_format == 'gif':
+        elif extension == 'gif':
             # Might need: brew install imagemagick
             Writer = animation.writers['imagemagick']
         else:
-            raise Exception('Invalid save_format')
+            raise Exception('Invalid extension')
 
         metadata = {
             'artist' : 'Vijay Varma',
@@ -523,7 +557,7 @@ if __name__ == '__main__':
             'copyright' : surfinBH.__copyright__,
             }
         writer = Writer(fps=15, metadata=metadata)
-        line_ani.save('%s.%s'%(args.save_file, args.save_format), writer=writer)
+        line_ani.save(args.save_file, writer=writer)
 
     else:
         # Pause settings
