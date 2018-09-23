@@ -2,7 +2,7 @@ desc = """Animations of binary black hole scattering.
 Generates an animation of a binary black hole merger and the final remnant.
 
 Example usage:
-python animate_surfinBH.py --q 2 --omega0 1.8e-2 --chiA0 0.2 0.7 -0.1 --chiB0 0.2 0.6 0.1
+python black_hole_scattering.py --q 2 --omega0 1.8e-2 --chiA0 0.2 0.7 -0.1 --chiB0 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
