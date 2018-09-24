@@ -50,7 +50,7 @@ LOW_DEF = False
 # number of frames per orbit
 PTS_PER_ORBIT = 30
 if LOW_DEF:
-    PTS_PER_ORBIT = 20
+    PTS_PER_ORBIT = 15
 
 # Time at which to freeze video for 5 seconds
 FREEZE_TIME = -100
@@ -60,10 +60,15 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.__init__(self, (0,0), (0,0), *args, **kwargs)
         self._verts3d = vecs
 
-    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=25):
+    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec):
         """ The length of the arrow is proportinal to the Kerr parameter
         a of the BH.
         """
+        if LOW_DEF:
+            scale_factor = 16.66
+        else:
+            scale_factor = 25
+
         x, y, z =  Bh_loc
         u, v, w =  chi_vec*mass
         xs = [x, x+u*scale_factor]
@@ -71,10 +76,15 @@ class Arrow3D(FancyArrowPatch):
         zs = [z, z+w*scale_factor]
         self._verts3d = xs, ys, zs
 
-    def set_angular_momentum_arrow(self, LHat, scale_factor=15):
+    def set_angular_momentum_arrow(self, LHat):
         """ Place the base at center and point in the direction of the
         instantaneous angular momentum direction.
         """
+        if LOW_DEF:
+            scale_factor = 10
+        else:
+            scale_factor = 15
+
         xs = [0, LHat[0]*scale_factor]
         ys = [0, LHat[1]*scale_factor]
         zs = [0, LHat[2]*scale_factor]
@@ -167,9 +177,14 @@ def get_omegaOrb_from_sparse_data(t_sparse, phiOrb_sparse):
 #----------------------------------------------------------------------------
 def get_marker_size(mass, chi):
     """ Marker size proportional to the Kerr horizon radius """
+    if LOW_DEF:
+        scale_factor = 15
+    else:
+        scale_factor = 30
+
     chimag = np.sqrt(np.sum(chi**2))
     rplus = mass + mass*np.sqrt(1 - chimag**2)
-    return rplus * 30
+    return rplus * scale_factor
 
 #----------------------------------------------------------------------------
 def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
@@ -393,7 +408,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
 
     # Attaching 3D axis to the figure
     if LOW_DEF:
-        fig = P.figure(figsize=(3,2))
+        fig = P.figure(figsize=(2.3,2))
     else:
         fig = P.figure(figsize=(5,4))
 
@@ -404,15 +419,15 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     markersize_BhC = get_marker_size(mf, chif)
 
     if LOW_DEF:
-        time_fontsize = 6
-        properties_fontsize = 6
+        time_fontsize = 5
+        properties_fontsize = 5
         properties_text_yloc = 0.75
-        freeze_fontsize = 8
-        label_fontsize = 6
-        ticks_fontsize = 6
-        title_fontsize = 8
+        freeze_fontsize = 7
+        label_fontsize = 5
+        ticks_fontsize = 5
+        title_fontsize = 7
         ticks_pad = -5
-        label_pad = -10
+        label_pad = -11
     else:
         time_fontsize = 12
         properties_fontsize = 10
@@ -435,6 +450,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # NOTE: Can't pass empty arrays into 3d version of plot()
     dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1, 1]
 
+    if LOW_DEF:
+        arrow_mutation_scale = 10
+    else:
+        arrow_mutation_scale = 20
+
     marker_alpha = 0.9
     traj_alpha = 0.8
     lines = [\
@@ -453,14 +473,14 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
             markeredgewidth=0, alpha=marker_alpha)[0], \
 
         # These two are for plotting component BH spins
-        ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['BhA_spin'])), \
-        ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['BhB_spin'])), \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
+            arrowstyle="-|>", color=colors_dict['BhA_spin'])), \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
+            arrowstyle="-|>", color=colors_dict['BhB_spin'])), \
 
         # This is for plotting angular momentum direction
-        ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['LHat'])), \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
+            arrowstyle="-|>", color=colors_dict['LHat'])), \
 
         # This is for plotting remnant BH
         ax.plot(BhC_traj[0,0:1]-1e10, BhC_traj[1,0:1], BhC_traj[2,0:1], \
