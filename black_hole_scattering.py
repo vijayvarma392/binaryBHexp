@@ -2,7 +2,7 @@ desc = """Animations of binary black hole scattering.
 Generates an animation of a binary black hole merger and the final remnant.
 
 Example usage:
-python black_hole_scattering.py --q 2 --omega_ref 1.8e-2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
@@ -44,11 +44,16 @@ colors_dict = {
         'LHat': 'orchid',
         }
 
+# Make very low def video. This is needed for pypi.
+LOW_DEF = False
+
 # number of frames per orbit
-pts_per_orbit = 30
+PTS_PER_ORBIT = 30
+if LOW_DEF:
+    PTS_PER_ORBIT = 20
 
 # Time at which to freeze video for 5 seconds
-freeze_time = -100
+FREEZE_TIME = -100
 
 class Arrow3D(FancyArrowPatch):
     def __init__(self, vecs, *args, **kwargs):
@@ -132,16 +137,16 @@ def get_trajectory(separation, quat_nrsur, orbphase_nrsur, bh_label):
 
 
 #-----------------------------------------------------------------------------
-def get_uniform_in_orbits_times(t, phi_orb, pts_per_orbit):
+def get_uniform_in_orbits_times(t, phi_orb, PTS_PER_ORBIT):
     """
-    returns sparse time array such that there are pts_per_orbit points
+    returns sparse time array such that there are PTS_PER_ORBIT points
     in each orbit.
     """
     # get numer of orbits
     n_orbits = int(abs((phi_orb[-1] - phi_orb[0])/(2*np.pi)))
 
-    # get sparse times such that there are pts_per_orbit points in each orbit
-    n_pts = int(n_orbits*pts_per_orbit)
+    # get sparse times such that there are PTS_PER_ORBIT points in each orbit
+    n_pts = int(n_orbits*PTS_PER_ORBIT)
     phi_orb_sparse = np.linspace(phi_orb[0], phi_orb[-1], n_pts)
     t_sparse = np.interp(phi_orb_sparse, phi_orb, t)
 
@@ -352,11 +357,14 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         allow_extrapolation=True)
 
     t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
-        pts_per_orbit)
+        PTS_PER_ORBIT)
 
-    # If freeze_time is not in t_binary, add it
-    if np.min(np.abs(t_binary - freeze_time)) > 0.1:
-        t_binary = np.sort(np.append(t_binary, freeze_time))
+    if LOW_DEF:
+        t_binary = t_binary[t_binary > -3000]
+
+    # If FREEZE_TIME is not in t_binary, add it
+    if np.min(np.abs(t_binary - FREEZE_TIME)) > 0.1:
+        t_binary = np.sort(np.append(t_binary, FREEZE_TIME))
 
     # interpolate dynamics on to t_binary
     quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
@@ -384,18 +392,44 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     BhC_traj = np.array([tmp*t_remnant for tmp in vf])
 
     # Attaching 3D axis to the figure
-    fig = P.figure(figsize=(5,4))
+    if LOW_DEF:
+        fig = P.figure(figsize=(3,2))
+    else:
+        fig = P.figure(figsize=(5,4))
+
     ax = axes3d.Axes3D(fig)
 
     markersize_BhA = get_marker_size(mA, chiA)
     markersize_BhB = get_marker_size(mB, chiB)
     markersize_BhC = get_marker_size(mf, chif)
 
-    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, fontsize=12)
-    properties_text = ax.text2D(0.05, 0.8, '', transform=ax.transAxes, \
-        fontsize=10)
-    freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, fontsize=14,
-            color='tomato')
+    if LOW_DEF:
+        time_fontsize = 6
+        properties_fontsize = 6
+        properties_text_yloc = 0.75
+        freeze_fontsize = 8
+        label_fontsize = 6
+        ticks_fontsize = 6
+        title_fontsize = 8
+        ticks_pad = -5
+        label_pad = -10
+    else:
+        time_fontsize = 12
+        properties_fontsize = 10
+        properties_text_yloc = 0.8
+        freeze_fontsize = 14
+        label_fontsize = 10
+        ticks_fontsize = 10
+        title_fontsize = 14
+        ticks_pad = 0
+        label_pad = 0
+
+    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+        fontsize=time_fontsize)
+    properties_text = ax.text2D(0.05, properties_text_yloc, '', \
+        transform=ax.transAxes, fontsize=properties_fontsize)
+    freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, \
+        fontsize=freeze_fontsize, color='tomato')
 
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
@@ -447,9 +481,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     ax.set_ylim3d([-max_range, max_range])
     ax.set_zlim3d([-max_range, max_range])
 
-    ax.set_xlabel('$x\,(M)$', fontsize=10)
-    ax.set_ylabel('$y\,(M)$', fontsize=10)
-    ax.set_zlabel('$z\,(M)$', fontsize=10)
+    ax.set_xlabel('$x\,(M)$', fontsize=label_fontsize)
+    ax.set_ylabel('$y\,(M)$', fontsize=label_fontsize)
+    ax.set_zlabel('$z\,(M)$', fontsize=label_fontsize)
 
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
@@ -465,18 +499,22 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     ax.yaxis._axinfo['tick']['outward_factor'] = 0.4
     ax.zaxis._axinfo['tick']['outward_factor'] = 0.4
 
-    ax.tick_params(axis='x', which='major', pad=0)
-    ax.tick_params(axis='y', which='major', pad=0)
-    ax.tick_params(axis='z', which='major', pad=0)
+    ax.tick_params(axis='x', which='major', pad=ticks_pad, \
+        labelsize=ticks_fontsize)
+    ax.tick_params(axis='y', which='major', pad=ticks_pad, \
+        labelsize=ticks_fontsize)
+    ax.tick_params(axis='z', which='major', pad=ticks_pad, \
+        labelsize=ticks_fontsize)
 
-    ax.xaxis.labelpad = 0
-    ax.yaxis.labelpad = 0
-    ax.zaxis.labelpad = -3
+    ax.xaxis.labelpad = label_pad
+    ax.yaxis.labelpad = label_pad
+    ax.zaxis.labelpad = label_pad -3
 
-    ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=14, x=0.74, y=0.99)
+    ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
+        x=0.74, y=0.99)
 
     # number of frames to include in orbit trace
-    hist_frames = int(3./4*(pts_per_orbit))
+    hist_frames = int(3./4*(PTS_PER_ORBIT))
 
     # common time array
     t = np.append(t_binary[t_binary<0], t_remnant)
@@ -485,7 +523,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     zero_idx = np.argmin(np.abs(t))
 
     # Will freeze for 5 seconds at this index
-    freeze_idx = np.argmin(np.abs(t - freeze_time))
+    freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
 
 
     #NOTE: There is a glitch if I don't skip the first index
