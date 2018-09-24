@@ -99,14 +99,12 @@ stage corresponds to a time step of 100M in simulation time.
 ## Generating new visualizations
 
 Since these videos don't require numerical simulations, you can generate as
-many as you like, and at any point in the parameter space.
-
-You can do so using the script ```black_hole_scattering.py``` in this
-repository.
+many as you like, and at any point in the parameter space.  You can do so using
+the script ```black_hole_scattering.py``` in this repository.
 
 ### Usage
 ```python
-python black_hole_scattering.py --q 2 --omega_ref 1.8e-2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 ```
 
 Do ```python black_hole_scattering.py -h``` for more options.
