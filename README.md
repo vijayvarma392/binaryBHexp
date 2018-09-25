@@ -34,13 +34,16 @@ Enough background, let's see some videos!
 
 <img src="animations/precessing.gif" width="500"/> 
 
-Here we are showing a precessing binary black hole merger. The black holes are
+Here we see a precessing binary black hole merger. The black holes are
 shown as circular markers, with arrows indicating their spins. The orbital
-angular momentum direction is shown by the pink arrow at the origin.  The BH
-spins are misaligned w.r.t the angular momentum direction. Therefore, the
-spins, the angular momentum, and the orbital plane all precess during the
-inspiral. It is interesting to see how the remnant spin direction is very close
-to the direction of the orbital angular momentum near merger.
+angular momentum direction is shown by the pink arrow at the origin. The colors
+in the planes indicate the value of the plus polarization of the GW as seen by
+an observer at that location. Red means positive and blue means negative,
+notice the quadrupolar pattern of the radiation.  The BH spins are misaligned
+w.r.t the angular momentum direction. Therefore, the spins, the angular
+momentum, and the orbital plane all precess during the inspiral. It is
+interesting to see how the remnant spin direction is very close to the
+direction of the orbital angular momentum near merger.
 
 See
 [PhysRevD.49.6274](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.49.6274)
@@ -93,8 +96,9 @@ After the merger, the remnant properties are generated using the
 spin and recoil kick velocity is shown at the top left. Note that in an actual
 simulation the kick is accumulated during the late inspiral and merger, causing
 the center of mass to drift. Here we ignore this and generate the remnant with
-the final kick velocity at the origin. Each frame of the video during this
-stage corresponds to a time step of 100M in simulation time.
+the final kick velocity at the origin. After the ringdown is complete, we
+switch our time steps to demonstrate the recoil kicks: Each frame of the video
+during this stage corresponds to a time step of 100M in simulation time.
 
 ## Generating new visualizations
 
