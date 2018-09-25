@@ -326,11 +326,12 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         # Plot the waveform on the bottom z-axis
         hplus = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
         ax.collections = []     # It becomes very slow without this
-        norm=colors.SymLogNorm(linthresh=linthresh, linscale=0.1, \
+        norm=colors.SymLogNorm(linthresh=linthresh, linscale=1, \
             vmin=vmin, vmax=vmax)
-        ax.contourf(xy_grid[0], xy_grid[1], hplus, zdir='z', \
+        cs = ax.contourf(xy_grid[0], xy_grid[1], hplus, zdir='z', \
             offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
             vmin=vmin, vmax=vmax, norm=norm)
+
     else:
         timestep_text.set_text('Increased time step to 100M')
 
@@ -641,7 +642,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
     # value is less than linthresh, the color scale is linear. Else log.
-    linthresh = 10*np.min(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
+    linthresh = np.max(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
     # Get vmax from waveform at peak.  Add in propagation delay
     zero_idx = np.argmin(np.abs(t-max_range))
     vmax = np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
