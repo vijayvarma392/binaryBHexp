@@ -35,18 +35,48 @@ import matplotlib.animation as animation
 from matplotlib.patches import FancyArrowPatch
 from matplotlib import cm
 from matplotlib.colors import LogNorm
-
-
 P.style.use('seaborn')
 
-colors_dict = {
-        'BhA_traj': 'indianred',
-        'BhB_traj': 'rebeccapurple',
-        'BhA_spin': 'goldenrod',
-        'BhB_spin': 'steelblue',
-        'BhC_spin': 'forestgreen',
-        'LHat': 'orchid',
-        }
+try:
+    from palettable.wesanderson import Aquatic1_5
+    from palettable.wesanderson import Darjeeling2_5
+    from palettable.wesanderson import Darjeeling3_5
+    from palettable.wesanderson import FantasticFox2_5
+    from palettable.wesanderson import GrandBudapest5_5
+    from palettable.wesanderson import GrandBudapest1_4
+    from palettable.wesanderson import GrandBudapest4_5
+    from palettable.wesanderson import Mendl_4
+    colors_aq_15 = Aquatic1_5.mpl_colors
+    colors_dj_25 = Darjeeling2_5.mpl_colors
+    colors_dj_35 = Darjeeling3_5.mpl_colors
+    colors_ff_25 = FantasticFox2_5.mpl_colors
+    colors_gb_55 = GrandBudapest5_5.mpl_colors
+    colors_gb_14 = GrandBudapest1_4.mpl_colors  
+    colors_gb_45 = GrandBudapest4_5.mpl_colors  
+    colors_mn_4 = Mendl_4.mpl_colors  
+
+    colors_dict = {
+            'BhA_traj': colors_dj_25[3],
+            'BhB_traj': colors_aq_15[3],
+            'BhA_spin': colors_gb_14[0],
+            'BhB_spin': colors_dj_25[1],
+            'BhC_spin': colors_dj_35[0],
+            'LHat': colors_gb_55[1],
+            }
+except:
+    print "palettable not found, using regular old colors. Get palettable" \
+        + " with 'pip install palettable' to get fancy colors."
+
+    colors_dict = {
+            'BhA_traj': 'indianred',
+            'BhB_traj': 'rebeccapurple',
+            'BhA_spin': 'goldenrod',
+            'BhB_spin': 'steelblue',
+            'BhC_spin': 'forestgreen',
+            'LHat': 'orchid',
+            }
+
+
 
 # Make very low def video. This is needed for pypi.
 LOW_DEF = False
@@ -452,7 +482,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     #print np.linalg.norm(vf) * 3 * 10**5
 
     # Will stop plotting waveform after this time
-    waveform_end_time = 75
+    waveform_end_time = 50
 
     # common time array: After waveform_end_time, each step is 100M
     t = np.append(t_binary[t_binary<waveform_end_time], \
