@@ -90,6 +90,18 @@ if LOW_DEF:
 # Time at which to freeze video for 5 seconds
 FREEZE_TIME = -100
 
+
+zorder_dict = {
+        'contourf': -200,
+        'info_text': 200,
+        'notice_text': 100,
+        'traj': 100,
+        'Bh': 110,
+        'spin': 200,
+        'L': 110,
+        }
+
+
 class Arrow3D(FancyArrowPatch):
     def __init__(self, vecs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0,0), (0,0), *args, **kwargs)
@@ -263,19 +275,35 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
 
 
 #----------------------------------------------------------------------------
-def get_grid_on_plane(num_pts_1d, max_range):
+def get_grids_on_planes(num_pts_1d, max_range):
     # generate grid
     x_1d = np.linspace(-max_range, max_range, num_pts_1d)
     y_1d = np.linspace(-max_range, max_range, num_pts_1d)
-    z = -max_range
-    x, y = np.meshgrid(x_1d, y_1d)
+    z_1d = np.linspace(-max_range, max_range, num_pts_1d)
 
-    # Get Euclidean radius and th,ph
-    r = np.sqrt(x**2 + y**2 + z**2)
-    th = np.arccos(z/r)
-    ph = np.arctan2(y,x)
+    [xZ, yZ] = np.meshgrid(x_1d, y_1d)
+    [xY, zY] = np.meshgrid(x_1d, z_1d)
+    [yX, zX] = np.meshgrid(y_1d, z_1d)
 
-    return [r, th, ph], [x,y]
+    xX = zZ = -max_range
+    yY = max_range
+
+    # Get Euclidean radii and th,ph
+    rZ = np.sqrt(xZ**2 + yZ**2 + zZ**2)
+    thZ = np.arccos(zZ/rZ)
+    phZ = np.arctan2(yZ,xZ)
+
+    rY = np.sqrt(xY**2 + yY**2 + zY**2)
+    thY = np.arccos(zY/rY)
+    phY = np.arctan2(yY,xY)
+
+    rX = np.sqrt(xX**2 + yX**2 + zX**2)
+    thX = np.arccos(zX/rX)
+    phX = np.arctan2(yX,xX)
+
+    return [rX, thX, phX], [yX, zX], \
+           [rY, thY, phY], [xY, zY], \
+           [rZ, thZ, phZ], [xZ, yZ]
 
 #----------------------------------------------------------------------------
 def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
@@ -305,7 +333,8 @@ def make_zero_if_small(x):
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
         timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
-        sph_grid, xy_grid, q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
+        sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
+        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh):
     """ The function that goes into animation
@@ -324,14 +353,21 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
     if current_time < waveform_end_time:
         # Plot the waveform on the bottom z-axis
-        hplus = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
+        hplusX = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridX)
+        hplusY = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridY)
+        hplusZ = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridZ)
         ax.collections = []     # It becomes very slow without this
         norm=colors.SymLogNorm(linthresh=linthresh, linscale=1, \
             vmin=vmin, vmax=vmax)
-        cs = ax.contourf(xy_grid[0], xy_grid[1], hplus, zdir='z', \
-            offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
-            vmin=vmin, vmax=vmax, norm=norm)
-
+        ax.contourf(hplusX, gridX[0], gridX[1], zdir='x', offset=-max_range, \
+            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
+            vmax=vmax, norm=norm)
+        ax.contourf(gridY[0], hplusY, gridY[1], zdir='y', offset=max_range, \
+            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
+            vmax=vmax, norm=norm)
+        ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', offset=-max_range, \
+            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
+            vmax=vmax, norm=norm)
     else:
         timestep_text.set_text('Increased time step to 100M')
 
@@ -470,7 +506,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     max_range = np.nanmax(separation)
 
     # Get mesh grid on bottom plane to generate waveform
-    sph_grid, xy_grid = get_grid_on_plane(10, max_range)
+    sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ \
+        = get_grids_on_planes(10, max_range)
 
     # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
@@ -537,13 +574,16 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         label_pad = 0
 
     time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
-        fontsize=time_fontsize, zorder=20)
+        fontsize=time_fontsize, zorder=zorder_dict['info_text'])
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
-        transform=ax.transAxes, fontsize=properties_fontsize, zorder=20)
+        transform=ax.transAxes, fontsize=properties_fontsize, \
+        zorder=zorder_dict['info_text'])
     freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, \
-        fontsize=freeze_fontsize, color='tomato', zorder=-20)
+        fontsize=freeze_fontsize, color='tomato', \
+        zorder=zorder_dict['notice_text'])
     timestep_text = ax.text2D(0.45, 0.7, '', transform=ax.transAxes, \
-        fontsize=timestep_fontsize, color='tomato', zorder=-20)
+        fontsize=timestep_fontsize, color='tomato', \
+        zorder=zorder_dict['notice_text'])
 
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
@@ -560,36 +600,42 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         # These two are for plotting component tracjectories
         ax.plot(BhA_traj[0,0:1]-1e10, BhA_traj[1,0:1], BhA_traj[2,0:1], \
             color=colors_dict['BhA_traj'], lw=2, alpha=traj_alpha, \
-            zorder=8)[0], \
+            zorder=zorder_dict['traj'])[0], \
         ax.plot(BhB_traj[0,0:1]-1e10, BhB_traj[1,0:1], BhB_traj[2,0:1], \
             color=colors_dict['BhB_traj'], lw=2, alpha=traj_alpha, \
-            zorder=8)[0], \
+            zorder=zorder_dict['traj'])[0], \
 
         # These two are for plotting component BHs
         ax.plot(BhA_traj[0,0:1]-1e10, BhA_traj[1,0:1], BhA_traj[2,0:1], \
             marker='o', markersize=markersize_BhA, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
+            markeredgewidth=0, alpha=marker_alpha, \
+            zorder=zorder_dict['Bh'])[0], \
         ax.plot(BhB_traj[0,0:1]-1e10, BhB_traj[1,0:1], BhB_traj[2,0:1], \
             marker='o', markersize=markersize_BhB, markerfacecolor='k',
-            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
+            markeredgewidth=0, alpha=marker_alpha, \
+            zorder=zorder_dict['Bh'])[0], \
 
         # These two are for plotting component BH spins
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhA_spin'], zorder=10)), \
+            arrowstyle="-|>", color=colors_dict['BhA_spin'], \
+            zorder=zorder_dict['spin'])), \
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhB_spin'], zorder=10)), \
+            arrowstyle="-|>", color=colors_dict['BhB_spin'], \
+            zorder=zorder_dict['spin'])), \
 
         # This is for plotting angular momentum direction
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['LHat'], zorder=9)), \
+            arrowstyle="-|>", color=colors_dict['LHat'], \
+            zorder=zorder_dict['L'])), \
 
         # This is for plotting remnant BH
         ax.plot(BhC_traj[0,0:1]-1e10, BhC_traj[1,0:1], BhC_traj[2,0:1], \
             marker='o', markersize=markersize_BhC, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
+            markeredgewidth=0, alpha=marker_alpha, \
+            zorder=zorder_dict['Bh'])[0], \
         # This is for plotting remnant spin
         ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['BhC_spin'], zorder=10)), \
+            color=colors_dict['BhC_spin'], zorder=zorder_dict['spin'])), \
         ]
 
     dataLines_remnant = [BhC_traj, 1]
@@ -642,11 +688,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
     # value is less than linthresh, the color scale is linear. Else log.
-    linthresh = np.max(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
+    linthresh = np.max(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_gridZ)))
     # Get vmax from waveform at peak.  Add in propagation delay
     zero_idx = np.argmin(np.abs(t-max_range))
     vmax = np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
-        sph_grid))
+                                       sph_gridZ))
     # Symmetric about 0
     vmin = -vmax
 
@@ -658,7 +704,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, freeze_text, timestep_text, max_range, \
-            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, sph_grid, xy_grid, \
+            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+            sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh), \
