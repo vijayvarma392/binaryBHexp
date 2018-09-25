@@ -646,7 +646,8 @@ if __name__ == '__main__':
     parser.add_argument('--save_file', type=str, default=None,
         help='File to save animation to. If given, will save animation to ' \
                 'this file. Else will show animation. Allowed extensions are ' \
-                'mp4 and gif.')
+                'mp4 and gif. mp4 has the best quality. We use lower quality ' \
+                'for gif to reduce file size.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
@@ -677,7 +678,10 @@ if __name__ == '__main__':
             'copyright' : surfinBH.__copyright__,
             }
         writer = Writer(fps=15, metadata=metadata)
-        line_ani.save(args.save_file, writer=writer)
+        if LOW_DEF or extension == 'gif':
+            line_ani.save(args.save_file, writer=writer)
+        else:
+            line_ani.save(args.save_file, writer=writer, dpi=300)
 
     else:
         # Pause settings
