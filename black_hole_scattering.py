@@ -537,9 +537,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         label_pad = 0
 
     time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
-        fontsize=time_fontsize)
+        fontsize=time_fontsize, zorder=20)
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
-        transform=ax.transAxes, fontsize=properties_fontsize)
+        transform=ax.transAxes, fontsize=properties_fontsize, zorder=20)
     freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, \
         fontsize=freeze_fontsize, color='tomato', zorder=-20)
     timestep_text = ax.text2D(0.45, 0.7, '', transform=ax.transAxes, \
