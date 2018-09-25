@@ -100,9 +100,9 @@ class Arrow3D(FancyArrowPatch):
         a of the BH.
         """
         if LOW_DEF:
-            scale_factor = 16.66
+            scale_factor = 13.33
         else:
-            scale_factor = 25
+            scale_factor = 20
 
         x, y, z =  Bh_loc
         u, v, w =  chi_vec*mass
@@ -265,7 +265,6 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
 #----------------------------------------------------------------------------
 def get_grid_on_plane(num_pts_1d, max_range):
     # generate grid
-    num_pts_1d = 10
     x_1d = np.linspace(-max_range, max_range, num_pts_1d)
     y_1d = np.linspace(-max_range, max_range, num_pts_1d)
     z = -max_range
@@ -280,7 +279,8 @@ def get_grid_on_plane(num_pts_1d, max_range):
 
 #----------------------------------------------------------------------------
 def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
-    """ Compute absolute value of strain at each r, th, ph value
+    """ Compute absolute value of strain at each r, th, ph value, using
+    the retarded time.
     """
     r, th, ph = sph_grid
     h = np.zeros(r.shape, dtype=complex)
@@ -306,7 +306,8 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
         timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
         sph_grid, xy_grid, q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
-        waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax):
+        waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
+        linthresh):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -323,12 +324,13 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
     if current_time < waveform_end_time:
         # Plot the waveform on the bottom z-axis
-        habs = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
+        hplus = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
         ax.collections = []     # It becomes very slow without this
-        ax.contourf(xy_grid[0], xy_grid[1], habs, zdir='z', \
-            offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
-            norm=colors.SymLogNorm(linthresh=0.1, linscale=0.1, vmin=vmin, vmax=vmax), \
+        norm=colors.SymLogNorm(linthresh=linthresh, linscale=0.1, \
             vmin=vmin, vmax=vmax)
+        ax.contourf(xy_grid[0], xy_grid[1], hplus, zdir='z', \
+            offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
+            vmin=vmin, vmax=vmax, norm=norm)
     else:
         timestep_text.set_text('Increased time step to 100M')
 
@@ -342,18 +344,19 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
             line.reset()
             timestep_text.set_text('')
 
+        properties_text.set_text('$q=%.2f$\n' \
+            '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
+            '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
+            make_zero_if_small(chiA_nrsur[num-1][0]), \
+            make_zero_if_small(chiA_nrsur[num-1][1]), \
+            make_zero_if_small(chiA_nrsur[num-1][2]), \
+            make_zero_if_small(chiB_nrsur[num-1][0]), \
+            make_zero_if_small(chiB_nrsur[num-1][1]), \
+            make_zero_if_small(chiB_nrsur[num-1][2]), \
+            ))
+
 
         for idx in range(len(dataLines_binary)):
-            properties_text.set_text('$q=%.2f$\n' \
-                '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
-                '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
-                make_zero_if_small(chiA_nrsur[num-1][0]), \
-                make_zero_if_small(chiA_nrsur[num-1][1]), \
-                make_zero_if_small(chiA_nrsur[num-1][2]), \
-                make_zero_if_small(chiB_nrsur[num-1][0]), \
-                make_zero_if_small(chiB_nrsur[num-1][1]), \
-                make_zero_if_small(chiB_nrsur[num-1][2]), \
-                ))
 
             line = lines[idx]
             data = dataLines_binary[idx]
@@ -464,7 +467,6 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         chiB_nrsur, LHat)
 
     max_range = np.nanmax(separation)
-    # max_range = 36.
 
     # Get mesh grid on bottom plane to generate waveform
     sph_grid, xy_grid = get_grid_on_plane(10, max_range)
@@ -487,7 +489,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     #print np.linalg.norm(vf) * 3 * 10**5
 
     # Will stop plotting waveform after this time
-    # long enough for waveform pattern to disappear, taking into account propagation delay
+    # long enough for waveform pattern to disappear, taking into account
+    # propagation delay
     waveform_end_time = 50 + 2*max_range
 
     # common time array: After waveform_end_time, each step is 100M
@@ -632,23 +635,23 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # number of frames to include in orbit trace
     hist_frames = int(3./4*(PTS_PER_ORBIT))
 
-    # Will freeze for 5 seconds at this index
+    # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
 
     # color range for contourf
-    # get vmin from the waveform at first index
-    # vmin = np.min(get_waveform_on_grid(t, 0, h_nrsur, sph_grid))
+    # Get linthresh from first index. With SymLogNorm, whenever the
+    # value is less than linthresh, the color scale is linear. Else log.
+    linthresh = 10*np.min(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
     # Get vmax from waveform at peak.  Add in propagation delay
     zero_idx = np.argmin(np.abs(t-max_range))
-    vmax = 1.1*np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
+    vmax = np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
         sph_grid))
     # Symmetric about 0
     vmin = -vmax
 
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
-    # Repeat freeze_idx 100 times, this is a hacky way to freeze the video
-    # here
+    # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
     frames = np.sort(np.append(frames, [freeze_idx]*75))
 
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
@@ -657,7 +660,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
             BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, sph_grid, xy_grid, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax), \
+            vmin, vmax, linthresh), \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
     if return_fig:
