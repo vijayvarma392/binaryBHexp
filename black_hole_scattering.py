@@ -27,11 +27,15 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 import surfinBH
 import NRSur7dq2
+from gwtools import harmonics
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
 import matplotlib.animation as animation
 from matplotlib.patches import FancyArrowPatch
+from matplotlib import cm
+from matplotlib.colors import LogNorm
+
 
 P.style.use('seaborn')
 
@@ -228,6 +232,36 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
 
 
 #----------------------------------------------------------------------------
+def get_grid_on_plane(num_pts_1d, max_range):
+    # generate grid
+    num_pts_1d = 10
+    x_1d = np.linspace(-max_range, max_range, num_pts_1d)
+    y_1d = np.linspace(-max_range, max_range, num_pts_1d)
+    z = -max_range
+    x, y = np.meshgrid(x_1d, y_1d)
+
+    # Get Euclidean radius and th,ph
+    r = np.sqrt(x**2 + y**2 + z**2)
+    th = np.arccos(z/r)
+    ph = np.arctan2(y,x)
+
+    return [r, th, ph], [x,y]
+
+#----------------------------------------------------------------------------
+def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
+    """ Compute absolute value of strain at each r, th, ph value
+    """
+    # FIXME use retarted time
+    r, th, ph = sph_grid
+    h = np.zeros(r.shape, dtype=complex)
+    for key in h_dict.keys():
+        ell, m = key
+        ylm = np.vectorize(harmonics.sYlm)(-2, ell, m, th, ph)
+        h += h_dict[key][t_idx]*ylm
+    return np.abs(h/r)
+
+
+#----------------------------------------------------------------------------
 def make_zero_if_small(x):
     if abs(x) < 1e-3:
         return 0
@@ -237,9 +271,9 @@ def make_zero_if_small(x):
 #----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
-        BhA_traj, BhB_traj, BhC_traj, LHat, \
-        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, \
-        freeze_idx, draw_full_trajectory):
+        timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+        sph_grid, xy_grid, q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
+        waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -254,8 +288,17 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         freeze_text.set_text('')
 
 
-    if current_time < 0:
+    if current_time < waveform_end_time:
+        # Plot the waveform on the bottom z-axis
+        habs = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
+        ax.collections = []     # It becomes very slow without this
+        ax.contourf(xy_grid[0], xy_grid[1], np.log10(habs), zdir='z', \
+            offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
+            vmin=vmin, vmax=vmax)
+    else:
+        timestep_text.set_text('Increased time step to 100M')
 
+    if current_time < 0:        # Show binary until t=0
         if num < 2:
             # Clear remnant stuff
             line = lines[len(dataLines_binary)]
@@ -263,6 +306,8 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
             line.set_3d_properties([])
             line = lines[len(dataLines_binary)+1]
             line.reset()
+            timestep_text.set_text('')
+
 
         for idx in range(len(dataLines_binary)):
             properties_text.set_text('$q=%.2f$\n' \
@@ -303,8 +348,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                     line.set_angular_momentum_arrow(LHat.T[:,num-1])
 
     else:
-        num = num - zero_idx + 1    # Ignore first index to avoid glitch
-        if num < 2:
+        if abs(current_time) < 1:
             # Clear binary stuff
             for idx in range(4):
                 line = lines[idx]
@@ -337,25 +381,14 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
     return lines
 
 
+
+
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
-
-    # evaluate remnant fit
-    fit_name = 'surfinBH7dq2'
-    fit = surfinBH.LoadFits(fit_name)
-
-    # If omega_ref is None, will assume the spins are given in the
-    # coorbital frame at t=-100M
-    mf, chif, vf, mf_err, chif_err, vf_err \
-        = fit.all(q, chiA, chiB, omega0=omega_ref)
-
-    #print np.linalg.norm(chif)
-    #print np.linalg.norm(vf)
-    #print np.linalg.norm(vf) * 3 * 10**5
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
@@ -390,21 +423,43 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
 
     h_nrsur, chiA_nrsur, chiB_nrsur = nr_sur(q, chiA, chiB, \
         f_ref=f_ref, t_ref=t_ref, return_spins=True, \
-        allow_extrapolation=True, LMax=2, t=t_binary)
+        allow_extrapolation=True, t=t_binary)
 
     LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
     separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
         chiB_nrsur, LHat)
 
+    max_range = np.nanmax(separation)
+
+    # Get mesh grid on bottom plane to generate waveform
+    sph_grid, xy_grid = get_grid_on_plane(10, max_range)
+
     # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
     BhB_traj = get_trajectory(separation * mA, quat_nrsur, orbphase_nrsur, 'B')
 
-    # time array for remnant
-    t_remnant = np.arange(0, 10000, 100)
+    # evaluate remnant fit
+    fit_name = 'surfinBH7dq2'
+    fit = surfinBH.LoadFits(fit_name)
+
+    # If omega_ref is None, will assume the spins are given in the
+    # coorbital frame at t=-100M
+    mf, chif, vf, mf_err, chif_err, vf_err \
+        = fit.all(q, chiA, chiB, omega0=omega_ref)
+
+    #print np.linalg.norm(chif)
+    #print np.linalg.norm(vf)
+    #print np.linalg.norm(vf) * 3 * 10**5
+
+    # Will stop plotting waveform after this time
+    waveform_end_time = 75
+
+    # common time array: After waveform_end_time, each step is 100M
+    t = np.append(t_binary[t_binary<waveform_end_time], \
+        np.arange(waveform_end_time, 10000+waveform_end_time, 100))
 
     # assume merger is at origin
-    BhC_traj = np.array([tmp*t_remnant for tmp in vf])
+    BhC_traj = np.array([tmp*t for tmp in vf])
 
     # Attaching 3D axis to the figure
     if LOW_DEF:
@@ -423,6 +478,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         properties_fontsize = 5
         properties_text_yloc = 0.75
         freeze_fontsize = 7
+        timestep_fontsize = 6
         label_fontsize = 5
         ticks_fontsize = 5
         title_fontsize = 7
@@ -433,6 +489,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         properties_fontsize = 10
         properties_text_yloc = 0.8
         freeze_fontsize = 14
+        timestep_fontsize = 12
         label_fontsize = 10
         ticks_fontsize = 10
         title_fontsize = 14
@@ -444,7 +501,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize)
     freeze_text = ax.text2D(0.6, 0.7, '', transform=ax.transAxes, \
-        fontsize=freeze_fontsize, color='tomato')
+        fontsize=freeze_fontsize, color='tomato', zorder=-20)
+    timestep_text = ax.text2D(0.45, 0.7, '', transform=ax.transAxes, \
+        fontsize=timestep_fontsize, color='tomato', zorder=-20)
 
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
@@ -460,46 +519,48 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     lines = [\
         # These two are for plotting component tracjectories
         ax.plot(BhA_traj[0,0:1]-1e10, BhA_traj[1,0:1], BhA_traj[2,0:1], \
-            color=colors_dict['BhA_traj'], lw=2, alpha=traj_alpha)[0], \
+            color=colors_dict['BhA_traj'], lw=2, alpha=traj_alpha, \
+            zorder=8)[0], \
         ax.plot(BhB_traj[0,0:1]-1e10, BhB_traj[1,0:1], BhB_traj[2,0:1], \
-            color=colors_dict['BhB_traj'], lw=2, alpha=traj_alpha)[0], \
+            color=colors_dict['BhB_traj'], lw=2, alpha=traj_alpha, \
+            zorder=8)[0], \
 
         # These two are for plotting component BHs
         ax.plot(BhA_traj[0,0:1]-1e10, BhA_traj[1,0:1], BhA_traj[2,0:1], \
             marker='o', markersize=markersize_BhA, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha)[0], \
+            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
         ax.plot(BhB_traj[0,0:1]-1e10, BhB_traj[1,0:1], BhB_traj[2,0:1], \
             marker='o', markersize=markersize_BhB, markerfacecolor='k',
-            markeredgewidth=0, alpha=marker_alpha)[0], \
+            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
 
         # These two are for plotting component BH spins
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhA_spin'])), \
+            arrowstyle="-|>", color=colors_dict['BhA_spin'], zorder=10)), \
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhB_spin'])), \
+            arrowstyle="-|>", color=colors_dict['BhB_spin'], zorder=10)), \
 
         # This is for plotting angular momentum direction
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['LHat'])), \
+            arrowstyle="-|>", color=colors_dict['LHat'], zorder=9)), \
 
         # This is for plotting remnant BH
         ax.plot(BhC_traj[0,0:1]-1e10, BhC_traj[1,0:1], BhC_traj[2,0:1], \
             marker='o', markersize=markersize_BhC, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha)[0], \
+            markeredgewidth=0, alpha=marker_alpha, zorder=9)[0], \
         # This is for plotting remnant spin
         ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['BhC_spin'])), \
-
+            color=colors_dict['BhC_spin'], zorder=10)), \
         ]
 
     dataLines_remnant = [BhC_traj, 1]
 
-    max_range = np.nanmax(separation)
 
     # Setting the axes properties
-    ax.set_xlim3d([-max_range, max_range])
-    ax.set_ylim3d([-max_range, max_range])
-    ax.set_zlim3d([-max_range, max_range])
+
+    # This seems to set the actual limits to max_range
+    ax.set_xlim3d([-max_range*0.96, max_range*0.96])
+    ax.set_ylim3d([-max_range*0.96, max_range*0.96])
+    ax.set_zlim3d([-max_range*0.96, max_range*0.96])
 
     ax.set_xlabel('$x\,(M)$', fontsize=label_fontsize)
     ax.set_ylabel('$y\,(M)$', fontsize=label_fontsize)
@@ -511,13 +572,12 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
 
     ax.set_facecolor('white')
 
-    ax.xaxis._axinfo['tick']['inward_factor'] = 0
-    ax.yaxis._axinfo['tick']['inward_factor'] = 0
-    ax.zaxis._axinfo['tick']['inward_factor'] = 0
-
-    ax.xaxis._axinfo['tick']['outward_factor'] = 0.4
-    ax.yaxis._axinfo['tick']['outward_factor'] = 0.4
-    ax.zaxis._axinfo['tick']['outward_factor'] = 0.4
+    #ax.xaxis._axinfo['tick']['inward_factor'] = 0
+    #ax.yaxis._axinfo['tick']['inward_factor'] = 0
+    #ax.zaxis._axinfo['tick']['inward_factor'] = 0
+    ax.xaxis._axinfo['tick']['outward_factor'] = 0
+    ax.yaxis._axinfo['tick']['outward_factor'] = 0
+    ax.zaxis._axinfo['tick']['outward_factor'] = 0
 
     ax.tick_params(axis='x', which='major', pad=ticks_pad, \
         labelsize=ticks_fontsize)
@@ -536,15 +596,16 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # number of frames to include in orbit trace
     hist_frames = int(3./4*(PTS_PER_ORBIT))
 
-    # common time array
-    t = np.append(t_binary[t_binary<0], t_remnant)
-
-    # Will switch to remant after this index
-    zero_idx = np.argmin(np.abs(t))
-
     # Will freeze for 5 seconds at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
 
+    # color range for contourf
+    # get vmin from the waveform at first index
+    vmin = np.log10(np.min(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
+    # Get vmax from waveform at peak
+    zero_idx = np.argmin(np.abs(t))
+    vmax = np.log10(np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
+        sph_grid)))
 
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
@@ -554,10 +615,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
 
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
-            time_text, properties_text, freeze_text, \
-            BhA_traj, BhB_traj, BhC_traj, LHat, \
-            q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, zero_idx, \
-            freeze_idx, draw_full_trajectory), \
+            time_text, properties_text, freeze_text, timestep_text, max_range, \
+            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, sph_grid, xy_grid, \
+            q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
+            waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
+            vmin, vmax), \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
     if return_fig:
