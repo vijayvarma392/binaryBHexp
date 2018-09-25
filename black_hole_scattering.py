@@ -263,19 +263,35 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
 
 
 #----------------------------------------------------------------------------
-def get_grid_on_plane(num_pts_1d, max_range):
+def get_grids_on_planes(num_pts_1d, max_range):
     # generate grid
     x_1d = np.linspace(-max_range, max_range, num_pts_1d)
     y_1d = np.linspace(-max_range, max_range, num_pts_1d)
-    z = -max_range
-    x, y = np.meshgrid(x_1d, y_1d)
+    z_1d = np.linspace(-max_range, max_range, num_pts_1d)
 
-    # Get Euclidean radius and th,ph
-    r = np.sqrt(x**2 + y**2 + z**2)
-    th = np.arccos(z/r)
-    ph = np.arctan2(y,x)
+    [xZ, yZ] = np.meshgrid(x_1d, y_1d)
+    [xY, zY] = np.meshgrid(x_1d, z_1d)
+    [yX, zX] = np.meshgrid(y_1d, z_1d)
 
-    return [r, th, ph], [x,y]
+    xX = zZ = -max_range
+    yY = max_range
+
+    # Get Euclidean radii and th,ph
+    rZ = np.sqrt(xZ**2 + yZ**2 + zZ**2)
+    thZ = np.arccos(zZ/rZ)
+    phZ = np.arctan2(yZ,xZ)
+
+    rY = np.sqrt(xY**2 + yY**2 + zY**2)
+    thY = np.arccos(zY/rY)
+    phY = np.arctan2(yY,xY)
+
+    rX = np.sqrt(xX**2 + yX**2 + zX**2)
+    thX = np.arccos(zX/rX)
+    phX = np.arctan2(yX,xX)
+
+    return [rX, thX, phX], [yX, zX], \
+           [rY, thY, phY], [xY, zY], \
+           [rZ, thZ, phZ], [xZ, yZ]
 
 #----------------------------------------------------------------------------
 def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
@@ -305,7 +321,8 @@ def make_zero_if_small(x):
 def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
         timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
-        sph_grid, xy_grid, q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
+        sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
+        q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh):
     """ The function that goes into animation
@@ -324,11 +341,19 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
     if current_time < waveform_end_time:
         # Plot the waveform on the bottom z-axis
-        hplus = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
+        # hplusX = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridX)
+        # hplusY = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridY)
+        hplusZ = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridZ)
         ax.collections = []     # It becomes very slow without this
         norm=colors.SymLogNorm(linthresh=linthresh, linscale=0.1, \
             vmin=vmin, vmax=vmax)
-        ax.contourf(xy_grid[0], xy_grid[1], hplus, zdir='z', \
+        # ax.contourf(hplusX, gridX[0], gridX[1], zdir='x', \
+        #     offset=-max_range, cmap=cm.coolwarm, zorder=-11, \
+        #     vmin=vmin, vmax=vmax, norm=norm)
+        # ax.contourf(gridY[0], hplusY, gridY[1], zdir='y', \
+        #     offset=max_range, cmap=cm.coolwarm, zorder=-11, \
+        #     vmin=vmin, vmax=vmax, norm=norm)
+        ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', \
             offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
             vmin=vmin, vmax=vmax, norm=norm)
     else:
@@ -469,7 +494,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     max_range = np.nanmax(separation)
 
     # Get mesh grid on bottom plane to generate waveform
-    sph_grid, xy_grid = get_grid_on_plane(10, max_range)
+    sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ = get_grids_on_planes(10, max_range)
 
     # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
@@ -641,11 +666,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
     # value is less than linthresh, the color scale is linear. Else log.
-    linthresh = 10*np.min(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
+    linthresh = 10*np.min(np.abs(get_waveform_on_grid(t, 0, h_nrsur, sph_gridZ)))
     # Get vmax from waveform at peak.  Add in propagation delay
     zero_idx = np.argmin(np.abs(t-max_range))
     vmax = np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
-        sph_grid))
+                                       sph_gridZ))
     # Symmetric about 0
     vmin = -vmax
 
@@ -657,7 +682,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, freeze_text, timestep_text, max_range, \
-            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, sph_grid, xy_grid, \
+            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+            sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh), \
