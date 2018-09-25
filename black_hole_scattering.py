@@ -34,6 +34,7 @@ from mpl_toolkits.mplot3d import proj3d
 import matplotlib.animation as animation
 from matplotlib.patches import FancyArrowPatch
 from matplotlib import cm
+import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
 P.style.use('seaborn')
 
@@ -281,14 +282,16 @@ def get_grid_on_plane(num_pts_1d, max_range):
 def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
     """ Compute absolute value of strain at each r, th, ph value
     """
-    # FIXME use retarted time
     r, th, ph = sph_grid
     h = np.zeros(r.shape, dtype=complex)
+    # find the time index that's closest to t_ret = t-r
+    t = t_vals[t_idx]
+    t_ret_idx = np.vectorize(lambda r: np.argmin(np.abs(t_vals - t + r)))(r)
     for key in h_dict.keys():
         ell, m = key
         ylm = np.vectorize(harmonics.sYlm)(-2, ell, m, th, ph)
-        h += h_dict[key][t_idx]*ylm
-    return np.abs(h/r)
+        h += h_dict[key][t_ret_idx]*ylm
+    return np.real(h/r)
 
 
 #----------------------------------------------------------------------------
@@ -322,8 +325,9 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         # Plot the waveform on the bottom z-axis
         habs = get_waveform_on_grid(t, num-1, h_nrsur, sph_grid)
         ax.collections = []     # It becomes very slow without this
-        ax.contourf(xy_grid[0], xy_grid[1], np.log10(habs), zdir='z', \
+        ax.contourf(xy_grid[0], xy_grid[1], habs, zdir='z', \
             offset=-max_range, cmap=cm.coolwarm, zorder=-10, \
+            norm=colors.SymLogNorm(linthresh=0.1, linscale=0.1, vmin=vmin, vmax=vmax), \
             vmin=vmin, vmax=vmax)
     else:
         timestep_text.set_text('Increased time step to 100M')
@@ -460,6 +464,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
         chiB_nrsur, LHat)
 
     max_range = np.nanmax(separation)
+    # max_range = 36.
 
     # Get mesh grid on bottom plane to generate waveform
     sph_grid, xy_grid = get_grid_on_plane(10, max_range)
@@ -482,7 +487,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     #print np.linalg.norm(vf) * 3 * 10**5
 
     # Will stop plotting waveform after this time
-    waveform_end_time = 50
+    # long enough for waveform pattern to disappear, taking into account propagation delay
+    waveform_end_time = 50 + 2*max_range
 
     # common time array: After waveform_end_time, each step is 100M
     t = np.append(t_binary[t_binary<waveform_end_time], \
@@ -631,11 +637,13 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
 
     # color range for contourf
     # get vmin from the waveform at first index
-    vmin = np.log10(np.min(get_waveform_on_grid(t, 0, h_nrsur, sph_grid)))
-    # Get vmax from waveform at peak
-    zero_idx = np.argmin(np.abs(t))
-    vmax = np.log10(np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
-        sph_grid)))
+    # vmin = np.min(get_waveform_on_grid(t, 0, h_nrsur, sph_grid))
+    # Get vmax from waveform at peak.  Add in propagation delay
+    zero_idx = np.argmin(np.abs(t-max_range))
+    vmax = 1.1*np.max(get_waveform_on_grid(t, zero_idx, h_nrsur, \
+        sph_grid))
+    # Symmetric about 0
+    vmin = -vmax
 
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
