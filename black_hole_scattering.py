@@ -782,7 +782,7 @@ if __name__ == '__main__':
         if LOW_DEF or extension == 'gif':
             line_ani.save(args.save_file, writer=writer)
         else:
-            line_ani.save(args.save_file, writer=writer, dpi=300)
+            line_ani.save(args.save_file, writer=writer, dpi=150)
 
     else:
         # Pause settings
