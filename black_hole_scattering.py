@@ -447,10 +447,10 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 line.reset()
 
 
-            properties_text.set_text('$m_f=%.2f\,M$\n' \
-                '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
-                '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
-                chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
+        properties_text.set_text('$m_f=%.2f\,M$\n' \
+            '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
+            '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
+            chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         for idx in range(len(dataLines_remnant)):
             line = lines[len(dataLines_binary)+idx]
@@ -501,6 +501,10 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # If FREEZE_TIME is not in t_binary, add it
     if np.min(np.abs(t_binary - FREEZE_TIME)) > 0.1:
         t_binary = np.sort(np.append(t_binary, FREEZE_TIME))
+
+    # If t=0 is not in t_binary, add it
+    if np.min(np.abs(t_binary - 0)) > 0.1:
+        t_binary = np.sort(np.append(t_binary, 0))
 
     # interpolate dynamics on to t_binary
     quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
@@ -715,14 +719,33 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
     # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
     frames = np.sort(np.append(frames, [freeze_idx]*75))
 
-    line_ani = animation.FuncAnimation(fig, update_lines, frames, \
-        fargs=(lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
+    fargs = (lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, freeze_text, timestep_text, max_range, \
             BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh), \
+            vmin, vmax, linthresh)
+
+    #update_lines(150, *fargs)
+    #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
+    #P.savefig('super_kick_inspiral.pdf', bbox_inches='tight')
+
+    #update_lines(freeze_idx, *fargs)
+    #P.savefig('super_kick_m100M.png', bbox_inches='tight')
+    #P.savefig('super_kick_m100M.pdf', bbox_inches='tight')
+
+    #update_lines(zero_idx, *fargs)
+    #P.savefig('super_kick_peak.png', bbox_inches='tight')
+    #P.savefig('super_kick_peak.pdf', bbox_inches='tight')
+
+    #update_lines(zero_idx+110, *fargs)
+    #P.savefig('super_kick_remnant.png', bbox_inches='tight')
+    #P.savefig('super_kick_remnant.pdf', bbox_inches='tight')
+    #exit()
+
+    line_ani = animation.FuncAnimation(fig, update_lines, frames, \
+        fargs=fargs, \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
     if return_fig:
