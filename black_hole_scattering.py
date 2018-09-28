@@ -169,7 +169,9 @@ def spline_interp(newX, oldX, oldY, allowExtrapolation=False):
         raise Exception('Lengths dont match.')
 
     if not allowExtrapolation:
-        if np.min(newX) < np.min(oldX) or np.max(newX) > np.max(oldX):
+        if np.min(newX) - np.min(oldX) < -1e-5 \
+                or np.max(newX) > np.max(oldX) > 1e-5:
+
             print np.min(newX), np.min(oldX), np.max(newX), np.max(oldX)
             print np.min(newX) < np.min(oldX)
             print np.max(newX) > np.max(oldX)
