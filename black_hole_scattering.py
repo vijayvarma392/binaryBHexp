@@ -350,7 +350,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, project_on_all_planes):
+        linthresh, height_map, project_on_all_planes):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -383,10 +383,14 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
                 offset=max_range, cmap=cm.coolwarm, \
                 zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, \
                 norm=norm)
-
-        ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', offset=-max_range, \
-            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
-            vmax=vmax, norm=norm)
+        if height_map:
+            # TODO Magic constants, fix the color map.
+            ax.plot_surface(gridZ[0], gridZ[1], - max_range + 3.*hplusZ/vmax, \
+                            cmap=cm.coolwarm, zorder=zorder_dict['contourf'])
+        else:
+            ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', offset=-max_range, \
+                        cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
+                        vmax=vmax, norm=norm)
     else:
         timestep_text.set_text('Increased time step to 100M')
 
@@ -478,7 +482,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
-        project_on_all_planes=False, return_fig=False):
+        project_on_all_planes=False, height_map=False, return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -530,7 +534,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
 
     # Get mesh grid on bottom plane to generate waveform
     sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ \
-        = get_grids_on_planes(10, max_range)
+        = get_grids_on_planes(11, max_range)
 
     # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
@@ -730,7 +734,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, project_on_all_planes)
+            vmin, vmax, linthresh, height_map, project_on_all_planes)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
@@ -783,15 +787,22 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, projects the waveform on all three back planes. ' \
         'By default only does the x-y plane at the bottom.')
+    parser.add_argument('--height_map', default=False, \
+        action='store_true', \
+        help='Map h to a height to visualize in the xy plane ' \
+        'instead of a contour plot.  Turns off project_on_all_planes.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
 
     args = parser.parse_args()
+    if (args.height_map):
+        args.project_on_all_planes=False
     line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
         omega_ref=args.omega_ref, \
         draw_full_trajectory=args.draw_full_trajectory, \
+        height_map=args.height_map, \
         project_on_all_planes=args.project_on_all_planes, \
         return_fig=True)
 
