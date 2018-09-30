@@ -350,7 +350,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh):
+        linthresh, project_on_all_planes):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -366,19 +366,24 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
 
     if current_time < waveform_end_time:
-        # Plot the waveform on the bottom z-axis
-        hplusX = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridX)
-        hplusY = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridY)
+        # Plot the waveform on the back planes
+        if project_on_all_planes:
+            hplusX = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridX)
+            hplusY = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridY)
         hplusZ = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridZ)
         ax.collections = []     # It becomes very slow without this
         norm=colors.SymLogNorm(linthresh=linthresh, linscale=1, \
             vmin=vmin, vmax=vmax)
-        ax.contourf(hplusX, gridX[0], gridX[1], zdir='x', offset=-max_range, \
-            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
-            vmax=vmax, norm=norm)
-        ax.contourf(gridY[0], hplusY, gridY[1], zdir='y', offset=max_range, \
-            cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
-            vmax=vmax, norm=norm)
+        if project_on_all_planes:
+            ax.contourf(hplusX, gridX[0], gridX[1], zdir='x', \
+                offset=-max_range, cmap=cm.coolwarm, \
+                zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, \
+                norm=norm)
+            ax.contourf(gridY[0], hplusY, gridY[1], zdir='y', \
+                offset=max_range, cmap=cm.coolwarm, \
+                zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, \
+                norm=norm)
+
         ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', offset=-max_range, \
             cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
             vmax=vmax, norm=norm)
@@ -472,8 +477,8 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
 
 
 #----------------------------------------------------------------------------
-def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
-        return_fig=False):
+def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
+        project_on_all_planes=False, return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -725,7 +730,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref, draw_full_trajectory, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh)
+            vmin, vmax, linthresh, project_on_all_planes)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
@@ -774,6 +779,10 @@ if __name__ == '__main__':
                 'this file. Else will show animation. Allowed extensions are ' \
                 'mp4 and gif. mp4 has the best quality. We use lower quality ' \
                 'for gif to reduce file size.')
+    parser.add_argument('--project_on_all_planes', default=False, \
+        action='store_true', \
+        help='If given, projects the waveform on all three back planes. ' \
+        'By default only does the x-y plane at the bottom.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
@@ -781,7 +790,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
-        args.omega_ref, args.draw_full_trajectory, return_fig=True)
+        omega_ref=args.omega_ref, \
+        draw_full_trajectory=args.draw_full_trajectory, \
+        project_on_all_planes=args.project_on_all_planes, \
+        return_fig=True)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
