@@ -364,7 +364,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, height_map, project_on_all_planes, hax, hmax_est):
+        linthresh, height_map, project_on_all_planes):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -788,7 +788,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, height_map, project_on_all_planes, hax, hmax_est)
+            vmin, vmax, linthresh, height_map, project_on_all_planes)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
