@@ -76,6 +76,8 @@ if use_palettable:
             'BhC_spin': colors_gb_45[1],
             'LHat': colors_gb_55[1],
             'info': colors_aq_15[0],
+            'h+': colors_dj_25[3],
+            'hx': colors_dj_25[1],
             }
 else:
 
@@ -356,17 +358,8 @@ def make_zero_if_small(x):
         return x
 
 #----------------------------------------------------------------------------
-def update_timeseries_plot(hax, t_binary, h_nrsur, azim, elev, current_time, hmax_est):
-    h_viewpoint = get_waveform_timeseries(h_nrsur, azim, elev)
-    hax.clear()
-    hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$')
-    hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$')
-    hax.set_ylim([ -1.2*hmax_est, 1.2*hmax_est ])
-    hax.axvline(x=current_time)
-
-#----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
-        dataLines_remnant, time_text, properties_text, freeze_text, \
+        dataLines_remnant, properties_text, freeze_text, \
         timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
@@ -375,8 +368,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     """ The function that goes into animation
     """
     current_time = t[num]
-    time_text.set_text('$t=%.1f\,M$'%current_time)
-
+    #time_text.set_text('$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
         # Add text about freezing before freezing
@@ -384,9 +376,6 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     if num == freeze_idx + 1:
         # Clear text about freezing after freezing
         freeze_text.set_text('')
-
-    update_timeseries_plot(hax, t_binary, h_nrsur, ax.azim, ax.elev, \
-                           current_time, hmax_est)
 
     if current_time < waveform_end_time:
         # Plot the waveform on the back planes
@@ -498,6 +487,19 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 mass = mf
                 line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
 
+
+    # Plot waveform time series
+    h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
+    for idx in range(3):
+        line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
+        if idx == 0: 
+            line.set_data(t_binary, np.real(h_viewpoint))
+        elif idx == 1:
+            line.set_data(t_binary, np.imag(h_viewpoint))
+        else:
+            line.set_xdata(current_time)
+
+
     return lines
 
 
@@ -592,14 +594,18 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     if LOW_DEF:
         fig = P.figure(figsize=(2.3,2))
     else:
-        fig = P.figure(figsize=(5,4))
+        fig = P.figure(figsize=(5,5.5))
 
     ax = axes3d.Axes3D(fig)
     l, b, w, h = ax.get_position().bounds
     ax.set_position([l, b + 0.25*h, w, 0.75*h ])
 
-    h_axis_est = get_waveform_timeseries(h_nrsur, 0., 90.)
-    hax = fig.add_axes([l, b, w, 0.25*h])
+    # axes to plot waveform time series
+    hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
+
+    # estimate maximum of waveform for scale of timeseries
+    hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
+    hax.set_ylim([ -hmax_est, hmax_est ])
 
     markersize_BhA = get_marker_size(mA, chiA)
     markersize_BhB = get_marker_size(mB, chiB)
@@ -628,8 +634,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         ticks_pad = 0
         label_pad = 0
 
-    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
-        fontsize=time_fontsize, zorder=zorder_dict['info_text'])
+    #time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+    #    fontsize=time_fontsize, zorder=zorder_dict['info_text'])
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize, \
         zorder=zorder_dict['info_text'])
@@ -643,6 +649,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
     dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1, 1]
+
+    # get wavefrom at viewpoint
+    h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
 
     if LOW_DEF:
         arrow_mutation_scale = 10
@@ -691,7 +700,23 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         # This is for plotting remnant spin
         ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
             color=colors_dict['BhC_spin'], zorder=zorder_dict['spin'])), \
+
+        # These two is for plotting the waveform time series
+        hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$', \
+            color=colors_dict['h+'], lw=1.2)[0], \
+        hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$', \
+            color=colors_dict['hx'], lw=1.2)[0], \
+
+        # This is for plotting the slider along the waveform time series
+        hax.axvline(x=t_binary[0]), \
+
         ]
+
+    hax.legend(loc='upper left', ncol=2)
+    hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
+    hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
+    hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
+    hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
     dataLines_remnant = [BhC_traj, 1]
 
@@ -740,8 +765,6 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
 
-    # estimate maximum of waveform for scale of timeseries
-    hmax_est = np.max(np.abs(h_axis_est))
 
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
@@ -760,7 +783,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     frames = np.sort(np.append(frames, [freeze_idx]*75))
 
     fargs = (lines, hist_frames, t, t_binary, dataLines_binary, dataLines_remnant, \
-            time_text, properties_text, freeze_text, timestep_text, max_range, \
+            properties_text, freeze_text, timestep_text, max_range, \
             BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
