@@ -43,8 +43,8 @@ try:
     import palettable
     use_palettable = True
 except:
-    print "palettable not found, using regular old colors. Get palettable" \
-        + " with 'pip install palettable' to get fancy colors."
+    print("palettable not found, using regular old colors. Get palettable" \
+        + " with 'pip install palettable' to get fancy colors.")
 
 if use_palettable:
     from palettable.wesanderson import Aquatic1_5
@@ -172,9 +172,9 @@ def spline_interp(newX, oldX, oldY, allowExtrapolation=False):
         if np.min(newX) - np.min(oldX) < -1e-5 \
                 or np.max(newX) > np.max(oldX) > 1e-5:
 
-            print np.min(newX), np.min(oldX), np.max(newX), np.max(oldX)
-            print np.min(newX) < np.min(oldX)
-            print np.max(newX) > np.max(oldX)
+            print(np.min(newX), np.min(oldX), np.max(newX), np.max(oldX))
+            print(np.min(newX) < np.min(oldX))
+            print(np.max(newX) > np.max(oldX))
             raise Exception('Trying to extrapolate, but '\
                 'allowExtrapolation=False')
 
@@ -549,9 +549,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     mf, chif, vf, mf_err, chif_err, vf_err \
         = fit.all(q, chiA, chiB, omega0=omega_ref)
 
-    #print np.linalg.norm(chif)
-    #print np.linalg.norm(vf)
-    #print np.linalg.norm(vf) * 3 * 10**5
+    #print(np.linalg.norm(chif))
+    #print(np.linalg.norm(vf))
+    #print(np.linalg.norm(vf) * 3 * 10**5)
 
     # Will stop plotting waveform after this time
     # long enough for waveform pattern to disappear, taking into account
