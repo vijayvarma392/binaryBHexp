@@ -339,8 +339,8 @@ def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
 def get_waveform_timeseries(h_dict, azim, elev):
     """ Compute the timeseries to plot in the lower panel from a given viewpoint
     """
-    th = azim * np.pi/180.
-    ph = (90. - elev) * np.pi/180.
+    ph = azim * np.pi/180.
+    th = (90. - elev) * np.pi/180.
     h = np.zeros_like(h_dict[h_dict.keys()[0]], dtype=complex)
     for key in h_dict.keys():
         ell, m = key
