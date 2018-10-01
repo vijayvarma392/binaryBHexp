@@ -335,6 +335,18 @@ def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
         h += h_dict[key][t_ret_idx]*ylm
     return np.real(h/r)
 
+#----------------------------------------------------------------------------
+def get_waveform_timeseries(h_dict, azim, elev):
+    """ Compute the timeseries to plot in the lower panel from a given viewpoint
+    """
+    th = azim * np.pi/180.
+    ph = (90. - elev) * np.pi/180.
+    h = np.zeros_like(h_dict[h_dict.keys()[0]], dtype=complex)
+    for key in h_dict.keys():
+        ell, m = key
+        ylm = harmonics.sYlm(-2, ell, m, th, ph)
+        h += h_dict[key]*ylm
+    return h
 
 #----------------------------------------------------------------------------
 def make_zero_if_small(x):
@@ -344,13 +356,20 @@ def make_zero_if_small(x):
         return x
 
 #----------------------------------------------------------------------------
-def update_lines(num, lines, hist_frames, t, dataLines_binary, \
+def update_timeseries_plot(hax, t_binary, h_nrsur, azim, elev, current_time):
+    h_viewpoint = get_waveform_timeseries(h_nrsur, azim, elev)
+    hax.clear()
+    hax.plot(t_binary, np.real(h_viewpoint), t_binary, np.imag(h_viewpoint))
+    hax.axvline(x=current_time)
+
+#----------------------------------------------------------------------------
+def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         dataLines_remnant, time_text, properties_text, freeze_text, \
         timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, height_map, project_on_all_planes):
+        linthresh, height_map, project_on_all_planes, hax):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -364,6 +383,7 @@ def update_lines(num, lines, hist_frames, t, dataLines_binary, \
         # Clear text about freezing after freezing
         freeze_text.set_text('')
 
+    update_timeseries_plot(hax, t_binary, h_nrsur, ax.azim, ax.elev, current_time)
 
     if current_time < waveform_end_time:
         # Plot the waveform on the back planes
@@ -572,6 +592,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         fig = P.figure(figsize=(5,4))
 
     ax = axes3d.Axes3D(fig)
+    l, b, w, h = ax.get_position().bounds
+    ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+    hax = fig.add_axes([l, b, w, 0.25*h])
 
     markersize_BhA = get_marker_size(mA, chiA)
     markersize_BhB = get_marker_size(mB, chiB)
@@ -728,13 +751,13 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
     frames = np.sort(np.append(frames, [freeze_idx]*75))
 
-    fargs = (lines, hist_frames, t, dataLines_binary, dataLines_remnant, \
+    fargs = (lines, hist_frames, t, t_binary, dataLines_binary, dataLines_remnant, \
             time_text, properties_text, freeze_text, timestep_text, max_range, \
             BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, height_map, project_on_all_planes)
+            vmin, vmax, linthresh, height_map, project_on_all_planes, hax)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
