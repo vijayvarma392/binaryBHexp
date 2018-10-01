@@ -356,10 +356,12 @@ def make_zero_if_small(x):
         return x
 
 #----------------------------------------------------------------------------
-def update_timeseries_plot(hax, t_binary, h_nrsur, azim, elev, current_time):
+def update_timeseries_plot(hax, t_binary, h_nrsur, azim, elev, current_time, hmax_est):
     h_viewpoint = get_waveform_timeseries(h_nrsur, azim, elev)
     hax.clear()
-    hax.plot(t_binary, np.real(h_viewpoint), t_binary, np.imag(h_viewpoint))
+    hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$')
+    hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$')
+    hax.set_ylim([ -1.2*hmax_est, 1.2*hmax_est ])
     hax.axvline(x=current_time)
 
 #----------------------------------------------------------------------------
@@ -369,7 +371,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, height_map, project_on_all_planes, hax):
+        linthresh, height_map, project_on_all_planes, hax, hmax_est):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -383,7 +385,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         # Clear text about freezing after freezing
         freeze_text.set_text('')
 
-    update_timeseries_plot(hax, t_binary, h_nrsur, ax.azim, ax.elev, current_time)
+    update_timeseries_plot(hax, t_binary, h_nrsur, ax.azim, ax.elev, \
+                           current_time, hmax_est)
 
     if current_time < waveform_end_time:
         # Plot the waveform on the back planes
@@ -594,6 +597,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     ax = axes3d.Axes3D(fig)
     l, b, w, h = ax.get_position().bounds
     ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+
+    h_axis_est = get_waveform_timeseries(h_nrsur, 0., 90.)
     hax = fig.add_axes([l, b, w, 0.25*h])
 
     markersize_BhA = get_marker_size(mA, chiA)
@@ -735,6 +740,9 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
 
+    # estimate maximum of waveform for scale of timeseries
+    hmax_est = np.max(np.abs(h_axis_est))
+
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
     # value is less than linthresh, the color scale is linear. Else log.
@@ -757,7 +765,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, height_map, project_on_all_planes, hax)
+            vmin, vmax, linthresh, height_map, project_on_all_planes, hax, hmax_est)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
