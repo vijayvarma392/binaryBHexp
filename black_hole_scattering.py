@@ -458,7 +458,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                     line.set_angular_momentum_arrow(LHat.T[:,num-1])
 
     else:
-        if abs(current_time) < 1:
+        if abs(current_time) < 10:
             # Clear binary stuff
             for idx in range(4):
                 line = lines[idx]
