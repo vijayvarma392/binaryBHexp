@@ -350,6 +350,33 @@ def get_waveform_timeseries(h_dict, azim, elev):
         h += h_dict[key]*ylm
     return h
 
+
+#----------------------------------------------------------------------------
+def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
+    """ Get predetermined trajectory for camera.
+        Varies the elevation between 0 and 90 degrees with given period.
+        Varies the azimuthal angle by azim_shift degrees every time step.
+        Ensures that elevation = 30 and azimuthal angle = -60 at stop_time, the
+        defaults set by matplotlib. update_lines should stop moving the camera
+        at this time.
+    """
+    omega = np.pi/period   # notice the sin**2
+
+    stop_idx = np.argmin(np.abs(t_binary - stop_time))     
+    t = t_binary - t_binary[stop_idx]
+
+    # phase shift so that we get elev=1./3 * 90 at stop_idx
+    phi0 = np.arcsin(1./np.sqrt(3))
+
+    # sin**2 is smoother than abs(sin)
+    elev_vec = 90*np.sin(omega*t + phi0)**2
+
+    azim_vec = np.arange(len(t_binary))*azim_shift
+    azim_vec -= azim_vec[stop_idx] +60
+
+    return [elev_vec, azim_vec]
+
+
 #----------------------------------------------------------------------------
 def make_zero_if_small(x):
     if abs(x) < 1e-3:
@@ -364,7 +391,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, height_map, project_on_all_planes, wave_time_series):
+        linthresh, camera_traj, height_map, project_on_all_planes, \
+        wave_time_series):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -488,6 +516,10 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
 
 
+    if current_time < -500:
+        if camera_traj is not None:
+            ax.view_init(elev=camera_traj[0][num], azim=camera_traj[1][num])
+
     # Plot waveform time series
     if wave_time_series:
         h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
@@ -509,7 +541,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         project_on_all_planes=False, height_map=False, wave_time_series=False, \
-        return_fig=False):
+        auto_rotate_camera=False, return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -613,6 +645,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         # estimate maximum of waveform for scale of timeseries
         hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
         hax.set_ylim([ -hmax_est, hmax_est ])
+
+    if auto_rotate_camera:
+        camera_traj = get_camera_trajectory(t_binary)
+    else:
+        camera_traj = None
 
     markersize_BhA = get_marker_size(mA, chiA)
     markersize_BhB = get_marker_size(mB, chiB)
@@ -797,8 +834,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, height_map, project_on_all_planes, \
-            wave_time_series)
+            vmin, vmax, linthresh, camera_traj, height_map, \
+            project_on_all_planes, wave_time_series)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
@@ -859,13 +896,17 @@ if __name__ == '__main__':
         help='Plots an interactive waveform time series at the bottom. The ' \
         'waveform changes based on viewing angle. This disables ' \
         'pause-on-click.')
+    parser.add_argument('--auto_rotate_camera', default=False, \
+        action='store_true', \
+        help='Auto rotates camera viewing angle. This turns off ' \
+        'project_on_all_planes. Particularly nice with wave_time_series set.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
 
     args = parser.parse_args()
-    if (args.height_map):
+    if args.height_map or args.auto_rotate_camera:
         args.project_on_all_planes=False
 
     line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
@@ -874,6 +915,7 @@ if __name__ == '__main__':
         height_map = args.height_map, \
         project_on_all_planes = args.project_on_all_planes, \
         wave_time_series = args.wave_time_series,
+        auto_rotate_camera = args.auto_rotate_camera,
         return_fig=True)
 
     if args.save_file is not None:
