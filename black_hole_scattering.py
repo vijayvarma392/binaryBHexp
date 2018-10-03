@@ -62,11 +62,11 @@ if use_palettable:
     colors_dj_35 = Darjeeling3_5.mpl_colors
     colors_ff_25 = FantasticFox2_5.mpl_colors
     colors_gb_55 = GrandBudapest5_5.mpl_colors
-    colors_gb_14 = GrandBudapest1_4.mpl_colors  
-    colors_gb_45 = GrandBudapest4_5.mpl_colors  
-    colors_gb_36 = GrandBudapest3_6.mpl_colors  
-    colors_zs_5 = Zissou_5.mpl_colors  
-    colors_ry_14 = Royal1_4.mpl_colors  
+    colors_gb_14 = GrandBudapest1_4.mpl_colors
+    colors_gb_45 = GrandBudapest4_5.mpl_colors
+    colors_gb_36 = GrandBudapest3_6.mpl_colors
+    colors_zs_5 = Zissou_5.mpl_colors
+    colors_ry_14 = Royal1_4.mpl_colors
 
     colors_dict = {
             'BhA_traj': colors_zs_5[2],
@@ -362,7 +362,7 @@ def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
     """
     omega = np.pi/period   # notice the sin**2
 
-    stop_idx = np.argmin(np.abs(t_binary - stop_time))     
+    stop_idx = np.argmin(np.abs(t_binary - stop_time))
     t = t_binary - t_binary[stop_idx]
 
     # phase shift so that we get elev=1./3 * 90 at stop_idx
@@ -525,7 +525,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
         for idx in range(3):
             line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
-            if idx == 0: 
+            if idx == 0:
                 line.set_data(t_binary, np.real(h_viewpoint))
             elif idx == 1:
                 line.set_data(t_binary, np.imag(h_viewpoint))
