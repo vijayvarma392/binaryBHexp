@@ -368,8 +368,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     """ The function that goes into animation
     """
     current_time = t[num]
-    if not wave_time_series:
-        time_text.set_text('$t=%.1f\,M$'%current_time)
+    time_text.set_text('$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
         # Add text about freezing before freezing
@@ -642,13 +641,8 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         ticks_pad = 0
         label_pad = 0
 
-    if wave_time_series:
-        # Time is given by the slider on the waveform anyway.
-        time_text = None
-    else:
-        time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
-            fontsize=time_fontsize, zorder=zorder_dict['info_text'])
-
+    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+        fontsize=time_fontsize, zorder=zorder_dict['info_text'])
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize, \
         zorder=zorder_dict['info_text'])
