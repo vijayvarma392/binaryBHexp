@@ -863,7 +863,8 @@ if __name__ == '__main__':
     parser.add_argument('--wave_time_series', default=False, \
         action='store_true', \
         help='Plots an interactive waveform time series at the bottom. The ' \
-        'waveform changes based on viewing angle.')
+        'waveform changes based on viewing angle. This disables ' \
+        'pause-on-click.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
@@ -918,5 +919,9 @@ if __name__ == '__main__':
             else:
                 line_ani.event_source.stop()
                 pause = True
-        fig.canvas.mpl_connect('button_press_event', onClick)
+
+        # The waveform does not update when you rotate when paused, so
+        # disable pausing if plotting waveform time series
+        if not args.wave_time_series:
+            fig.canvas.mpl_connect('button_press_event', onClick)
         P.show()
