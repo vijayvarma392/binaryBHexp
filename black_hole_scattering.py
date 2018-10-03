@@ -359,16 +359,17 @@ def make_zero_if_small(x):
 
 #----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
-        dataLines_remnant, properties_text, freeze_text, \
-        timestep_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+        dataLines_remnant, properties_text, freeze_text, timestep_text, \
+        time_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
-        linthresh, height_map, project_on_all_planes):
+        linthresh, height_map, project_on_all_planes, wave_time_series):
     """ The function that goes into animation
     """
     current_time = t[num]
-    #time_text.set_text('$t=%.1f\,M$'%current_time)
+    if not wave_time_series:
+        time_text.set_text('$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
         # Add text about freezing before freezing
@@ -489,15 +490,16 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
     # Plot waveform time series
-    h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
-    for idx in range(3):
-        line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
-        if idx == 0: 
-            line.set_data(t_binary, np.real(h_viewpoint))
-        elif idx == 1:
-            line.set_data(t_binary, np.imag(h_viewpoint))
-        else:
-            line.set_xdata(current_time)
+    if wave_time_series:
+        h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
+        for idx in range(3):
+            line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
+            if idx == 0: 
+                line.set_data(t_binary, np.real(h_viewpoint))
+            elif idx == 1:
+                line.set_data(t_binary, np.imag(h_viewpoint))
+            else:
+                line.set_xdata(current_time)
 
 
     return lines
@@ -507,7 +509,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
-        project_on_all_planes=False, height_map=False, return_fig=False):
+        project_on_all_planes=False, height_map=False, wave_time_series=False, \
+        return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -594,18 +597,23 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     if LOW_DEF:
         fig = P.figure(figsize=(2.3,2))
     else:
-        fig = P.figure(figsize=(5,5.5))
+        if wave_time_series:
+            fig = P.figure(figsize=(5,5.5))
+        else:
+            fig = P.figure(figsize=(5,4))
 
     ax = axes3d.Axes3D(fig)
-    l, b, w, h = ax.get_position().bounds
-    ax.set_position([l, b + 0.25*h, w, 0.75*h ])
 
-    # axes to plot waveform time series
-    hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
+    if wave_time_series:
+        l, b, w, h = ax.get_position().bounds
+        ax.set_position([l, b + 0.25*h, w, 0.75*h ])
 
-    # estimate maximum of waveform for scale of timeseries
-    hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
-    hax.set_ylim([ -hmax_est, hmax_est ])
+        # axes to plot waveform time series
+        hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
+
+        # estimate maximum of waveform for scale of timeseries
+        hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
+        hax.set_ylim([ -hmax_est, hmax_est ])
 
     markersize_BhA = get_marker_size(mA, chiA)
     markersize_BhB = get_marker_size(mB, chiB)
@@ -634,8 +642,13 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         ticks_pad = 0
         label_pad = 0
 
-    #time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
-    #    fontsize=time_fontsize, zorder=zorder_dict['info_text'])
+    if wave_time_series:
+        # Time is given by the slider on the waveform anyway.
+        time_text = None
+    else:
+        time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+            fontsize=time_fontsize, zorder=zorder_dict['info_text'])
+
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize, \
         zorder=zorder_dict['info_text'])
@@ -700,23 +713,25 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         # This is for plotting remnant spin
         ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
             color=colors_dict['BhC_spin'], zorder=zorder_dict['spin'])), \
-
-        # These two is for plotting the waveform time series
-        hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$', \
-            color=colors_dict['h+'], lw=1.2)[0], \
-        hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$', \
-            color=colors_dict['hx'], lw=1.2)[0], \
-
-        # This is for plotting the slider along the waveform time series
-        hax.axvline(x=t_binary[0]), \
-
         ]
 
-    hax.legend(loc='upper left', ncol=2)
-    hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
-    hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
-    hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
-    hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
+    if wave_time_series:
+        lines += [ \
+            # These two is for plotting the waveform time series
+            hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$', \
+                color=colors_dict['h+'], lw=1.2)[0], \
+            hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$', \
+                color=colors_dict['hx'], lw=1.2)[0], \
+
+            # This is for plotting the slider along the waveform time series
+            hax.axvline(x=t_binary[0]), \
+            ]
+
+        hax.legend(loc='upper left', ncol=2)
+        hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
+        hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
+        hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
+        hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
     dataLines_remnant = [BhC_traj, 1]
 
@@ -782,13 +797,14 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
     frames = np.sort(np.append(frames, [freeze_idx]*75))
 
-    fargs = (lines, hist_frames, t, t_binary, dataLines_binary, dataLines_remnant, \
-            properties_text, freeze_text, timestep_text, max_range, \
-            BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+    fargs = (lines, hist_frames, t, t_binary, dataLines_binary, \
+            dataLines_remnant, properties_text, freeze_text, timestep_text, \
+            time_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
-            vmin, vmax, linthresh, height_map, project_on_all_planes)
+            vmin, vmax, linthresh, height_map, project_on_all_planes, \
+            wave_time_series)
 
     #update_lines(150, *fargs)
     #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
@@ -841,10 +857,13 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, projects the waveform on all three back planes. ' \
         'By default only does the x-y plane at the bottom.')
-    parser.add_argument('--height_map', default=False, \
-        action='store_true', \
+    parser.add_argument('--height_map', default=False, action='store_true', \
         help='Map h to a height to visualize in the xy plane ' \
         'instead of a contour plot.  Turns off project_on_all_planes.')
+    parser.add_argument('--wave_time_series', default=False, \
+        action='store_true', \
+        help='Plots an interactive waveform time series at the bottom. The ' \
+        'waveform changes based on viewing angle.')
     parser.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
@@ -853,11 +872,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if (args.height_map):
         args.project_on_all_planes=False
+
     line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
-        omega_ref=args.omega_ref, \
-        draw_full_trajectory=args.draw_full_trajectory, \
-        height_map=args.height_map, \
-        project_on_all_planes=args.project_on_all_planes, \
+        omega_ref = args.omega_ref, \
+        draw_full_trajectory = args.draw_full_trajectory, \
+        height_map = args.height_map, \
+        project_on_all_planes = args.project_on_all_planes, \
+        wave_time_series = args.wave_time_series,
         return_fig=True)
 
     if args.save_file is not None:
