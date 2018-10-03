@@ -541,7 +541,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         project_on_all_planes=False, height_map=False, wave_time_series=False, \
-        auto_rotate_camera=False, return_fig=False):
+        auto_rotate_camera=False, return_fig=False, save_file=None):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -837,21 +837,19 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             vmin, vmax, linthresh, camera_traj, height_map, \
             project_on_all_planes, wave_time_series)
 
-    #update_lines(150, *fargs)
-    #P.savefig('super_kick_inspiral.png', bbox_inches='tight')
-    #P.savefig('super_kick_inspiral.pdf', bbox_inches='tight')
-
-    #update_lines(freeze_idx, *fargs)
-    #P.savefig('super_kick_m100M.png', bbox_inches='tight')
-    #P.savefig('super_kick_m100M.pdf', bbox_inches='tight')
-
-    #update_lines(zero_idx, *fargs)
-    #P.savefig('super_kick_peak.png', bbox_inches='tight')
-    #P.savefig('super_kick_peak.pdf', bbox_inches='tight')
-
-    #update_lines(zero_idx+110, *fargs)
-    #P.savefig('super_kick_remnant.png', bbox_inches='tight')
-    #P.savefig('super_kick_remnant.pdf', bbox_inches='tight')
+    # Hacks to plots stills during movie
+    #still_time = -2000
+    #still_time = -100
+    #still_time = 0
+    #still_time = 2280
+    #time_tag = '%s'%(abs(still_time))
+    #if still_time < 0:
+    #    time_tag = 'm%s'%time_tag
+    #update_lines(np.argmin(np.abs(t-still_time)), *fargs)
+    #P.savefig('%s_%s.png'%(save_file.split('.')[0], time_tag), \
+    #    bbox_inches='tight')
+    #P.savefig('%s_%s.pdf'%(save_file.split('.')[0], time_tag), \
+    #    bbox_inches='tight')
     #exit()
 
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
@@ -916,7 +914,7 @@ if __name__ == '__main__':
         project_on_all_planes = args.project_on_all_planes, \
         wave_time_series = args.wave_time_series,
         auto_rotate_camera = args.auto_rotate_camera,
-        return_fig=True)
+        save_file = args.save_file, return_fig=True)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
