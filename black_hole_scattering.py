@@ -399,11 +399,11 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         if height_map:
             # TODO Magic constants, fix the color map.
             ax.plot_surface(gridZ[0], gridZ[1], - max_range + 3.*hplusZ/vmax, \
-                            cmap=cm.coolwarm, zorder=zorder_dict['contourf'])
+                cmap=cm.coolwarm, zorder=zorder_dict['contourf'])
         else:
-            ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', offset=-max_range, \
-                        cmap=cm.coolwarm, zorder=zorder_dict['contourf'], vmin=vmin, \
-                        vmax=vmax, norm=norm)
+            ax.contourf(gridZ[0], gridZ[1], hplusZ, zdir='z', \
+                offset=-max_range, cmap=cm.coolwarm, \
+                zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, norm=norm)
     else:
         timestep_text.set_text('Increased time step to 100M')
 
