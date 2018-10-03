@@ -872,13 +872,13 @@ if __name__ == '__main__':
     parser.add_argument('--q', type=float, required=True,
         help='Mass ratio.')
     parser.add_argument('--chiA', type=float, required=True, nargs=3,
-        help='Spin of BhA at omega_ref. Array of size 3.')
+        help='Dimensionless spin of BhA at omega_ref. List of size 3.')
     parser.add_argument('--chiB', type=float, required=True, nargs=3,
-        help='Spin of BhB at omega_ref. Array of size 3.')
+        help='Dimensionless spin of BhB at omega_ref. List of size 3.')
     parser.add_argument('--omega_ref', type=float, default=None,
-        help='Starting orbital frequency at which the spins are specified. ' \
-            'Currently, > 0.018. If not specified, assumes the spins are ' \
-            'specified at t=-100M from the peak of the waveform.')
+        help='Orbital frequency at which the spins are specified. In units ' \
+            'of rad/M. Currently, >= 0.018. If not specified, assumes the ' \
+            'spins are specified at t=-100M from the peak of the waveform.')
     parser.add_argument('--save_file', type=str, default=None,
         help='File to save animation to. If given, will save animation to ' \
                 'this file. Else will show animation. Allowed extensions are ' \
