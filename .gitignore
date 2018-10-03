@@ -2,3 +2,5 @@
 *.swp
 *.ipynb_checkpoints
 animations/*.mp4
+animations/*.pdf
+animations/*.png
