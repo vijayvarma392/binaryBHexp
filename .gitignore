@@ -4,5 +4,6 @@
 animations/*.mp4
 animations/*.pdf
 animations/*.png
+stills/
 
 make_sine_movies_script.sh
