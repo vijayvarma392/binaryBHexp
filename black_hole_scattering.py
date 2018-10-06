@@ -840,7 +840,7 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
 
     # save still and exit
     if still_time is not None:
-        time_tag = '%s'%(abs(still_time))
+        time_tag = '%d'%(abs(still_time))
         if still_time < 0:
             time_tag = 'm%s'%time_tag
         update_lines(np.argmin(np.abs(t-still_time)), *fargs)
