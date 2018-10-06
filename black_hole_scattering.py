@@ -541,7 +541,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 #----------------------------------------------------------------------------
 def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         project_on_all_planes=False, height_map=False, wave_time_series=False, \
-        auto_rotate_camera=False, return_fig=False, save_file=None):
+        auto_rotate_camera=False, save_file=None, still_time=None,  \
+        return_fig=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -837,20 +838,18 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
             vmin, vmax, linthresh, camera_traj, height_map, \
             project_on_all_planes, wave_time_series)
 
-    # Hacks to plots stills during movie
-    #still_time = -2000
-    #still_time = -100
-    #still_time = 0
-    #still_time = 2280
-    #time_tag = '%s'%(abs(still_time))
-    #if still_time < 0:
-    #    time_tag = 'm%s'%time_tag
-    #update_lines(np.argmin(np.abs(t-still_time)), *fargs)
-    #P.savefig('%s_%s.png'%(save_file.split('.')[0], time_tag), \
-    #    bbox_inches='tight')
-    #P.savefig('%s_%s.pdf'%(save_file.split('.')[0], time_tag), \
-    #    bbox_inches='tight')
-    #exit()
+    # save still and exit
+    if still_time is not None:
+        time_tag = '%s'%(abs(still_time))
+        if still_time < 0:
+            time_tag = 'm%s'%time_tag
+        update_lines(np.argmin(np.abs(t-still_time)), *fargs)
+        still_fnametag = '%s_%s'%(save_file.split('.')[0], time_tag)
+        P.savefig('%s.png'%still_fnametag, bbox_inches='tight')
+        P.savefig('%s.pdf'%still_fnametag, bbox_inches='tight')
+        exit()
+
+
 
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=fargs, \
@@ -902,19 +901,23 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
+    parser.add_argument('--still_time', default=None, type=float, \
+        help='If given, saves a plot of the movie at this time and exits.')
 
     args = parser.parse_args()
     if args.height_map or args.auto_rotate_camera:
         args.project_on_all_planes=False
 
-    line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB, \
-        omega_ref = args.omega_ref, \
-        draw_full_trajectory = args.draw_full_trajectory, \
-        height_map = args.height_map, \
-        project_on_all_planes = args.project_on_all_planes, \
+    line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB,
+        omega_ref = args.omega_ref,
+        draw_full_trajectory = args.draw_full_trajectory,
+        height_map = args.height_map,
+        project_on_all_planes = args.project_on_all_planes,
         wave_time_series = args.wave_time_series,
         auto_rotate_camera = args.auto_rotate_camera,
-        save_file = args.save_file, return_fig=True)
+        save_file = args.save_file,
+        still_time = args.still_time,
+        return_fig=True)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
