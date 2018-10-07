@@ -34,16 +34,27 @@ Enough background, let's see some videos!
 
 <img src="animations/precessing.gif" width="500"/> 
 
-Here we see a precessing binary black hole merger. The black holes are
-shown as circular markers, with arrows indicating their spins. The orbital
-angular momentum direction is shown by the pink arrow at the origin. The colors
-in the planes indicate the value of the plus polarization of the GW as seen by
-an observer at that location. Red means positive and blue means negative,
-notice the quadrupolar pattern of the radiation.  The BH spins are misaligned
-w.r.t the angular momentum direction. Therefore, the spins, the angular
-momentum, and the orbital plane all precess during the inspiral. It is
-interesting to see how the remnant spin direction is very close to the
-direction of the orbital angular momentum near merger.
+Here we see a precessing binary black hole merger. The black holes are shown as
+circular markers, with arrows indicating their spins. The orbital angular
+momentum direction is shown by the pink arrow at the origin. The colors in the
+planes indicate the value of the plus polarization of the GW as seen by an
+observer at that location; red means positive and blue means negative, notice
+the quadrupolar pattern of the radiation. In the plot at the bottom, we show
+the plus and cross polarizations as seen from the camera viewing angle.  The BH
+spins are misaligned w.r.t the angular momentum direction. Therefore, the
+spins, the angular momentum, and the orbital plane all precess during the
+inspiral. It is interesting to see how the remnant spin direction is very close
+to the direction of the orbital angular momentum near merger.
+
+<img src="animations/precessing_auto_rotate.gif" width="500"/> 
+
+Here we show the same animation, but with varying camera angle. We project the
+wavefrom only on the bottom plane. In the plot at the bottom we see how the
+waveform changes based on the viewing angle; this is because the different
+modes (spin-weighted spherical harmonic modes) combine with different weights
+based on the observer viewing angle. Notice how the GW signal is strongest
+along the direction of orbital angular momentum and weakest in perpendicular
+directions.
 
 See
 [PhysRevD.49.6274](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.49.6274)
