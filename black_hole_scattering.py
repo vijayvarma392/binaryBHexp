@@ -936,7 +936,6 @@ if __name__ == '__main__':
 
         metadata = {
             'artist' : 'Vijay Varma',
-            'title' :'surfinBH animation',
             'genre' : 'Physics',
             'subject' : 'Animation of binary black hole scattering process.',
             'copyright' : surfinBH.__copyright__,
