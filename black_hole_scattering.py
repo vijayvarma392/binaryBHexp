@@ -73,7 +73,7 @@ if use_palettable:
             'BhB_traj': colors_gb_14[2],
             'BhA_spin': colors_gb_45[3],
             'BhB_spin': colors_aq_15[1],
-            'BhC_spin': colors_gb_45[1],
+            'BhC_spin': colors_zs_5[0],
             'LHat': colors_gb_55[1],
             'info': colors_aq_15[0],
             'h+': colors_dj_25[3],
@@ -88,7 +88,9 @@ else:
             'BhB_spin': 'steelblue',
             'BhC_spin': 'forestgreen',
             'LHat': 'orchid',
-            'info': 'tomato',
+            'info': 'k',
+            'h+': 'tomato',
+            'hx': 'steelblue',
             }
 
 
