@@ -28,11 +28,11 @@ numerical simulation!
 
 ## Visualizations
 
-Enough background, let's see some videos! 
+Enough background, let's see some videos!
 
 ### Precessing binary black hole
 
-<img src="animations/precessing.gif" width="500"/> 
+<img src="animations/precessing.gif" width="500"/>
 
 Here we see a precessing binary black hole merger. The black holes are shown as
 circular markers, with arrows indicating their spins. The orbital angular
@@ -46,7 +46,7 @@ spins, the angular momentum, and the orbital plane all precess during the
 inspiral. It is interesting to see how the remnant spin direction is very close
 to the direction of the orbital angular momentum near merger.
 
-<img src="animations/precessing_auto_rotate.gif" width="500"/> 
+<img src="animations/precessing_auto_rotate.gif" width="500"/>
 
 Here we show the same animation, but with varying camera angle. We project the
 wavefrom only on the bottom plane. In the plot at the bottom we see how the
@@ -62,7 +62,7 @@ to learn more about precessing binary black holes.
 
 ### Aligned-spin binary black hole
 
-<img src="animations/aligned.gif" width="500"/> 
+<img src="animations/aligned.gif" width="500"/>
 
 Here the spins are aligned w.r.t the angular momentum direction, and there
 is no precession. Due to symmetries, the remnant spin is also aligned,
@@ -70,7 +70,7 @@ while the remnant velocity is restricted to the orbital plane.
 
 ### Super-kick
 
-<img src="animations/super_kick.gif" width="500"/> 
+<img src="animations/super_kick.gif" width="500"/>
 
 In this case, notice how the spins line up in a single plane close to the
 merger. This is believed to be necessary to cause super-kicks, or very high
@@ -82,7 +82,20 @@ This phenomenon was discovered through numerical simulations. See
 [gr-qc/0702052](https://arxiv.org/abs/gr-qc/0702052), and
 [arxiv:1802.04276](https://arxiv.org/abs/1802.04276) for more details.
 
-### Details about these videos
+
+### Sinusoidal-kicks
+
+<img src="animations/sine_kicks.gif" width="1000"/>
+
+The kick velocity is very sensitive to the orientation of the component spins
+near merger. Here we show several cases where the spins have a fixed magnitude
+and are restricted to the orbital plane, but the angle between them is varied.
+Notice the sinusoidal nature of the final kick magnitude.
+
+This phenomenon was also discovered through numerical simulations, see
+[gr-qc/0702133](https://arxiv.org/abs/gr-qc/0702133).
+
+## Details about these videos
 
 A black hole is indicated by a circular marker with an arrow attached. The
 radius of the marker is proportional to the Kerr horizon radius of the BH. The
@@ -127,7 +140,7 @@ Do ```python black_hole_scattering.py -h``` for more options.
 ### Dependencies
 
 All of these can be installed through pip or conda.
-* [NRSur7dq2](https://pypi.org/project/NRSur7dq2) (at least 1.0.5)  
+* [NRSur7dq2](https://pypi.org/project/NRSur7dq2) (at least 1.0.5)
 * [surfinBH](https://pypi.org/project/surfinBH/)
 * [gwtools](https://pypi.org/project/gwtools/)
 
@@ -136,4 +149,4 @@ The code is developed and maintained by [Vijay
 Varma](http://www.tapir.caltech.edu/~vvarma/).  Please credit me if you use
 these visualizations in your work, presentations or outreach.  Please, report
 bugs to
-[&#118;&#118;&#097;&#114;&#109;&#097;&#064;&#099;&#097;&#108;&#116;&#101;&#099;&#104;&#046;&#101;&#100;&#117;](mailto:&#118;&#118;&#097;&#114;&#109;&#097;&#064;&#099;&#097;&#108;&#116;&#101;&#099;&#104;&#046;&#101;&#100;&#117;).  
+[&#118;&#118;&#097;&#114;&#109;&#097;&#064;&#099;&#097;&#108;&#116;&#101;&#099;&#104;&#046;&#101;&#100;&#117;](mailto:&#118;&#118;&#097;&#114;&#109;&#097;&#064;&#099;&#097;&#108;&#116;&#101;&#099;&#104;&#046;&#101;&#100;&#117;).
