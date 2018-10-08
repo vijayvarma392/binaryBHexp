@@ -1,3 +1,5 @@
+<script src="http://api.html5media.info/1.1.8/html5media.min.js"></script>
+
 # Black hole scattering
 Visualization of the binary black hole scattering process.
 
@@ -32,7 +34,8 @@ Enough background, let's see some videos!
 
 ### Precessing binary black hole
 
-<img src="animations/precessing.gif" width="500"/> 
+<video src="animations/precessing.mp4" width="500" controls preload loop></video>
+
 
 Here we see a precessing binary black hole merger. The black holes are shown as
 circular markers, with arrows indicating their spins. The orbital angular
@@ -46,7 +49,7 @@ spins, the angular momentum, and the orbital plane all precess during the
 inspiral. It is interesting to see how the remnant spin direction is very close
 to the direction of the orbital angular momentum near merger.
 
-<img src="animations/precessing_auto_rotate.gif" width="500"/> 
+<video src="animations/precessing_auto_rotate.mp4" width="500" controls preload loop></video>
 
 Here we show the same animation, but with varying camera angle. We project the
 wavefrom only on the bottom plane. In the plot at the bottom we see how the
@@ -62,7 +65,7 @@ to learn more about precessing binary black holes.
 
 ### Aligned-spin binary black hole
 
-<img src="animations/aligned.gif" width="500"/> 
+<video src="animations/aligned.mp4" width="500" controls preload loop></video>
 
 Here the spins are aligned w.r.t the angular momentum direction, and there
 is no precession. Due to symmetries, the remnant spin is also aligned,
@@ -70,7 +73,7 @@ while the remnant velocity is restricted to the orbital plane.
 
 ### Super-kick
 
-<img src="animations/super_kick.gif" width="500"/> 
+<video src="animations/super_kick.mp4" width="500" controls preload loop></video>
 
 In this case, notice how the spins line up in a single plane close to the
 merger. This is believed to be necessary to cause super-kicks, or very high
