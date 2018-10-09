@@ -252,7 +252,7 @@ def get_marker_size(mass, chi):
     return rplus * scale_factor
 
 #----------------------------------------------------------------------------
-def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
+def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat, pnorder=3.5):
     """ Roughly 3.5 PN accurate separation. This is not verified or tested,
     so don't use this for real science, only visualization. """
 
@@ -273,21 +273,36 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat):
     # Get 3.5 PN accurate gamma=1./r from Eq.(4.3) of
     # https://arxiv.org/pdf/1212.5520v2.pdf, but ignore the
     # log term in x**3 term
+
+
     x = omega**(2./3.)
-    gamma = x * ( 1 + x * (1. - 1./3 *eta) \
-            + x**(3./2) * (5./3 * SL + deltaM * SigmaL ) \
-            + x**2 * (1 - 65./12 *eta) \
-            + x**(5./2) * ( (10./3 + 8./9 * eta)*SL + 2* deltaM * SigmaL) \
-            + x**3 * (1. + (-2203./2520 -41./192 * np.pi**2)*eta \
-                + 229./36 * eta**2 + 1./81 * eta**3) \
-            + x**(7./2) * ( (5 - 127./12 *eta - 6 * eta**2)*SL + \
-                deltaM * SigmaL * (3 - 61./6 *eta - 8./3 * eta**2) ) \
-            )
-    r = 1/gamma
+    gamma_by_x = 0
+
+    if pnorder >= 0:
+        gamma_by_x += 1
+    if pnorder >= 1:
+        gamma_by_x += x * (1. - 1./3 *eta)
+    if pnorder >= 1.5:
+        gamma_by_x += x**(3./2) * (5./3 * SL + deltaM * SigmaL )
+    if pnorder >= 2:
+        gamma_by_x += x**2 * (1 - 65./12 *eta)
+    if pnorder >= 2.5:
+        gamma_by_x += x**(5./2) * ( (10./3 + 8./9 * eta)*SL \
+            + 2* deltaM * SigmaL)
+    if pnorder >= 3:
+        gamma_by_x += x**3 * (1. + (-2203./2520 -41./192 * np.pi**2)*eta \
+                + 229./36 * eta**2 + 1./81 * eta**3)
+    if pnorder >= 3.5:
+        gamma_by_x += x**(7./2) * ( (5 - 127./12 *eta - 6 * eta**2)*SL + \
+                deltaM * SigmaL * (3 - 61./6 *eta - 8./3 * eta**2) )
+
+
+    r = 1./gamma_by_x/x
 
     # To this add the 2PN spin-spin term from Eq.(4.13) of
     # https://arxiv.org/pdf/gr-qc/9506022.pdf
-    r += omega**(-2./3) * (-1./2 * eta * chiAB) * omega**(4./3)
+    if pnorder >= 2:
+        r += omega**(-2./3) * (-1./2 * eta * chiAB) * omega**(4./3)
 
     return r
 
