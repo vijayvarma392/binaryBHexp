@@ -541,10 +541,11 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
 #----------------------------------------------------------------------------
-def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
-        project_on_all_planes=False, height_map=False, wave_time_series=False, \
+def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
+        draw_full_trajectory=False, project_on_all_planes=False, \
+        height_map=False, wave_time_series=False, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
-        return_fig=False):
+        rescale_fig_for_widgets=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -628,22 +629,20 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
     BhC_traj = np.array([tmp*t for tmp in vf])
 
     # Attaching 3D axis to the figure
-    if LOW_DEF:
-        fig = P.figure(figsize=(2.3,2))
-    else:
-        if wave_time_series:
-            fig = P.figure(figsize=(5,5.5))
-        else:
-            fig = P.figure(figsize=(5,4))
-
     ax = axes3d.Axes3D(fig)
 
     if wave_time_series:
         l, b, w, h = ax.get_position().bounds
-        ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+        if rescale_fig_for_widgets:
+            ax.set_position([l, b + 0.25*h, w*0.7, 0.75*h ])
+            # axes to plot waveform time series
+            hax = fig.add_axes([0.135, 0.08, 0.5, 0.17])
+            hax.clear()
+        else:
+            ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+            # axes to plot waveform time series
+            hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
 
-        # axes to plot waveform time series
-        hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
 
         # estimate maximum of waveform for scale of timeseries
         hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
@@ -851,16 +850,11 @@ def BBH_scattering(q, chiA, chiB, omega_ref=None, draw_full_trajectory=False, \
         P.savefig('%s.pdf'%still_fnametag, bbox_inches='tight')
         exit()
 
-
-
     line_ani = animation.FuncAnimation(fig, update_lines, frames, \
         fargs=fargs, \
         interval=50, blit=False, repeat=True, repeat_delay=5e3)
 
-    if return_fig:
-        return line_ani, fig
-    else:
-        return line_ani
+    return line_ani
 
 
 #############################    main    ##################################
@@ -910,7 +904,17 @@ if __name__ == '__main__':
     if args.height_map or args.auto_rotate_camera:
         args.project_on_all_planes=False
 
-    line_ani, fig = BBH_scattering(args.q, args.chiA, args.chiB,
+
+    if LOW_DEF:
+        fig = P.figure(figsize=(2.3,2))
+    else:
+        if args.wave_time_series:
+            fig = P.figure(figsize=(5,5.5))
+        else:
+            fig = P.figure(figsize=(5,4))
+
+
+    line_ani = BBH_scattering(fig, args.q, args.chiA, args.chiB,
         omega_ref = args.omega_ref,
         draw_full_trajectory = args.draw_full_trajectory,
         height_map = args.height_map,
@@ -918,8 +922,7 @@ if __name__ == '__main__':
         wave_time_series = args.wave_time_series,
         auto_rotate_camera = args.auto_rotate_camera,
         save_file = args.save_file,
-        still_time = args.still_time,
-        return_fig=True)
+        still_time = args.still_time)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
