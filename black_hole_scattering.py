@@ -9,7 +9,7 @@ During the inspiral there are 30 frames per orbit.
 After the merger each frame corresponds to a time step of 100M.
 
 The precessing frame quaternion and phase is obtained from NRSur7dq2.
-The seperation is estimated from 3.5PN relation between r and omega, and omega
+The separation is estimated from 3.5PN relation between r and omega, and omega
 is obtained from NRSur7dq2.
 The remnant properties are obtained from surfinBH.
 
@@ -74,7 +74,8 @@ if use_palettable:
             'BhA_spin': colors_gb_45[3],
             'BhB_spin': colors_aq_15[1],
             'BhC_spin': colors_zs_5[0],
-            'LHat': colors_gb_55[1],
+            'L': colors_gb_55[1],
+            'J': colors_aq_15[0],
             'info': colors_aq_15[0],
             'h+': colors_dj_25[3],
             'hx': colors_dj_25[1],
@@ -87,7 +88,7 @@ else:
             'BhA_spin': 'goldenrod',
             'BhB_spin': 'steelblue',
             'BhC_spin': 'forestgreen',
-            'LHat': 'orchid',
+            'L': 'orchid',
             'info': 'k',
             'h+': 'tomato',
             'hx': 'steelblue',
@@ -115,6 +116,7 @@ zorder_dict = {
         'Bh': 110,
         'spin': 200,
         'L': 110,
+        'J': 90,
         }
 
 
@@ -123,15 +125,16 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.__init__(self, (0,0), (0,0), *args, **kwargs)
         self._verts3d = vecs
 
-    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec):
-        """ The length of the arrow is proportinal to the Kerr parameter
-        a of the BH.
-        """
-        if LOW_DEF:
-            scale_factor = 13.33
-        else:
-            scale_factor = 20
+    def set_arrow_at_origin(self, vec):
+        xs = [0, vec[0]]
+        ys = [0, vec[1]]
+        zs = [0, vec[2]]
+        self._verts3d = xs, ys, zs
 
+    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=20):
+        """
+        The length of the arrow is proportinal to Kerr parameter (a) of the BH.
+        """
         x, y, z =  Bh_loc
         u, v, w =  chi_vec*mass
         xs = [x, x+u*scale_factor]
@@ -139,18 +142,11 @@ class Arrow3D(FancyArrowPatch):
         zs = [z, z+w*scale_factor]
         self._verts3d = xs, ys, zs
 
-    def set_angular_momentum_arrow(self, LHat):
-        """ Place the base at center and point in the direction of the
-        instantaneous angular momentum direction.
-        """
-        if LOW_DEF:
-            scale_factor = 10
-        else:
-            scale_factor = 15
-
-        xs = [0, LHat[0]*scale_factor]
-        ys = [0, LHat[1]*scale_factor]
-        zs = [0, LHat[2]*scale_factor]
+    def set_angular_momentum_arrow(self, L, scale_factor=25):
+        #Place the base at center.
+        xs = [0, L[0]*scale_factor]
+        ys = [0, L[1]*scale_factor]
+        zs = [0, L[2]*scale_factor]
         self._verts3d = xs, ys, zs
 
     def reset(self):
@@ -395,6 +391,65 @@ def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
 
 
 #----------------------------------------------------------------------------
+def get_binary_data(q, chiA, chiB, omega_ref):
+
+    mA = q/(1.+q)
+    mB = 1./(1.+q)
+
+    nr_sur = NRSur7dq2.NRSurrogate7dq2()
+
+    # If omega_ref is not given, set f_ref to None, and t_ref to -100
+    f_ref = None if omega_ref is None else omega_ref/np.pi
+    t_ref = -100 if omega_ref is None else None
+
+    # get NRSur dynamics
+    quat_nrsur, orbphase_nrsur, _, _ \
+        = nr_sur.get_dynamics(q, chiA, chiB, omega_ref=omega_ref, t_ref=t_ref, \
+        allow_extrapolation=True)
+
+    t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
+        PTS_PER_ORBIT)
+
+    if LOW_DEF:
+        t_binary = t_binary[t_binary > -3000]
+
+    # If FREEZE_TIME is not in t_binary, add it
+    if np.min(np.abs(t_binary - FREEZE_TIME)) > 0.1:
+        t_binary = np.sort(np.append(t_binary, FREEZE_TIME))
+
+    # If t=0 is not in t_binary, add it
+    if np.min(np.abs(t_binary - 0)) > 0.1:
+        t_binary = np.sort(np.append(t_binary, 0))
+
+    # interpolate dynamics on to t_binary
+    quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
+        for tmp in quat_nrsur])
+    orbphase_nrsur = spline_interp(t_binary, nr_sur.tds, orbphase_nrsur)
+
+    omega_nrsur = get_omegaOrb_from_sparse_data(t_binary, orbphase_nrsur)
+
+    h_nrsur, chiA_nrsur, chiB_nrsur = nr_sur(q, chiA, chiB, \
+        f_ref=f_ref, t_ref=t_ref, return_spins=True, \
+        allow_extrapolation=True, t=t_binary)
+
+    LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
+    separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
+        chiB_nrsur, LHat)
+
+    # Newtonian
+    LMag = q/(1.+q)**2 * omega_nrsur**(-1./3)
+    L = LHat*LMag[:, None]
+
+    # Get component trajectories
+    BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
+    BhB_traj = get_trajectory(separation * mA, quat_nrsur, orbphase_nrsur, 'B')
+
+    return t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
+        BhB_traj, separation
+
+
+
+#----------------------------------------------------------------------------
 def make_zero_if_small(x):
     if abs(x) < 1e-3:
         return 0
@@ -404,7 +459,7 @@ def make_zero_if_small(x):
 #----------------------------------------------------------------------------
 def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         dataLines_remnant, properties_text, freeze_text, timestep_text, \
-        time_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+        time_text, max_range, BhA_traj, BhB_traj, BhC_traj, L, h_nrsur, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
@@ -499,7 +554,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                     line.set_BH_spin_arrow(BhB_traj[:,num-1], mB, \
                         chiB_nrsur[num-1])
                 elif idx == 6:
-                    line.set_angular_momentum_arrow(LHat.T[:,num-1])
+                    line.set_angular_momentum_arrow(L.T[:,num-1])
 
     else:
         if abs(current_time) < 10:
@@ -553,8 +608,6 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     return lines
 
 
-
-
 #----------------------------------------------------------------------------
 def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
         draw_full_trajectory=False, project_on_all_planes=False, \
@@ -564,59 +617,17 @@ def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
+    t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
+        BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref)
+
+    max_range = np.nanmax(separation)
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
 
-    nr_sur = NRSur7dq2.NRSurrogate7dq2()
-
-    # If omega_ref is not given, set f_ref to None, and t_ref to -100
-    f_ref = None if omega_ref is None else omega_ref/np.pi
-    t_ref = -100 if omega_ref is None else None
-
-    # get NRSur dynamics
-    quat_nrsur, orbphase_nrsur, _, _ \
-        = nr_sur.get_dynamics(q, chiA, chiB, omega_ref=omega_ref, t_ref=t_ref, \
-        allow_extrapolation=True)
-
-    t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
-        PTS_PER_ORBIT)
-
-    if LOW_DEF:
-        t_binary = t_binary[t_binary > -3000]
-
-    # If FREEZE_TIME is not in t_binary, add it
-    if np.min(np.abs(t_binary - FREEZE_TIME)) > 0.1:
-        t_binary = np.sort(np.append(t_binary, FREEZE_TIME))
-
-    # If t=0 is not in t_binary, add it
-    if np.min(np.abs(t_binary - 0)) > 0.1:
-        t_binary = np.sort(np.append(t_binary, 0))
-
-    # interpolate dynamics on to t_binary
-    quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
-        for tmp in quat_nrsur])
-    orbphase_nrsur = spline_interp(t_binary, nr_sur.tds, orbphase_nrsur)
-
-    omega_nrsur = get_omegaOrb_from_sparse_data(t_binary, orbphase_nrsur)
-
-    h_nrsur, chiA_nrsur, chiB_nrsur = nr_sur(q, chiA, chiB, \
-        f_ref=f_ref, t_ref=t_ref, return_spins=True, \
-        allow_extrapolation=True, t=t_binary)
-
-    LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
-    separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
-        chiB_nrsur, LHat)
-
-    max_range = np.nanmax(separation)
-
     # Get mesh grid on bottom plane to generate waveform
     sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ \
         = get_grids_on_planes(11, max_range)
-
-    # Get component trajectories
-    BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
-    BhB_traj = get_trajectory(separation * mA, quat_nrsur, orbphase_nrsur, 'B')
 
     # evaluate remnant fit
     fit_name = 'surfinBH7dq2'
@@ -750,7 +761,7 @@ def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
 
         # This is for plotting angular momentum direction
         ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['LHat'], \
+            arrowstyle="-|>", color=colors_dict['L'], \
             zorder=zorder_dict['L'])), \
 
         # This is for plotting remnant BH
@@ -759,8 +770,9 @@ def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
             markeredgewidth=0, alpha=marker_alpha, \
             zorder=zorder_dict['Bh'])[0], \
         # This is for plotting remnant spin
-        ax.add_artist(Arrow3D(None, mutation_scale=20, lw=3, arrowstyle="-|>", \
-            color=colors_dict['BhC_spin'], zorder=zorder_dict['spin'])), \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
+            arrowstyle="-|>", color=colors_dict['BhC_spin'], \
+            zorder=zorder_dict['spin'])), \
         ]
 
     if wave_time_series:
@@ -847,7 +859,7 @@ def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
 
     fargs = (lines, hist_frames, t, t_binary, dataLines_binary, \
             dataLines_remnant, properties_text, freeze_text, timestep_text, \
-            time_text, max_range, BhA_traj, BhB_traj, BhC_traj, LHat, h_nrsur, \
+            time_text, max_range, BhA_traj, BhB_traj, BhC_traj, L, h_nrsur, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
