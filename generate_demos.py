@@ -1,6 +1,6 @@
 import os
 
-prec_cmd = "python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --save_file animations/precessing.gif"
+prec_cmd = "python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes --save_file animations/precessing.gif"
 
 prec_rot_cmd = "python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera --save_file animations/precessing_auto_rotate.gif" 
 
