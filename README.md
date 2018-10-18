@@ -46,9 +46,11 @@ spins, the angular momentum, and the orbital plane all precess during the
 inspiral. It is interesting to see how the remnant spin direction is very close
 to the direction of the orbital angular momentum near merger.
 
+#### Precessing binary black hole with varying camera angle
+
 <img src="animations/precessing_auto_rotate.gif" width="500"/>
 
-Here we show the same animation, but with varying camera angle. We project the
+Here we show the same animation, but with a varying camera angle. We project the
 wavefrom only on the bottom plane. In the plot at the bottom we see how the
 waveform changes based on the viewing angle; this is because the different
 modes (spin-weighted spherical harmonic modes) combine with different weights
