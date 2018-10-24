@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 prec_cmd = "python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes --save_file animations/precessing.gif"
 
@@ -9,7 +10,7 @@ super_kick_cmd = "python black_hole_scattering.py --q 1.34 --chiA 0.62 -0.27 0.3
 aligned_cmd = "python black_hole_scattering.py --q 2 --chiA 0 0 -0.6 --chiB 0 0 0.8 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes --save_file animations/aligned.gif" 
 
 os.system(prec_cmd)
-for still_time in [-3650, 2280]:
+for still_time in [-3650, -2000, -1000, -100, -10, 0, 15, 45, 75, 2280]:
     os.system('%s --still_time %f'%(prec_cmd, still_time))
 
 os.system(prec_rot_cmd)
