@@ -8,7 +8,7 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser(description=desc,
-    formatter_class=argparse.RawDescriptionHelpFormatter)
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--num_mov', type=int, default=5,
     help='Number of movies. Should be odd.')
 
@@ -37,7 +37,7 @@ for i, alpha in enumerate(alphas):
     chiB = -chiA
     cmdline = cmdline_format.format(q, chiA[0], chiA[1], chiA[2], \
         chiB[0], chiB[1], chiB[2], base_filename, i)
-    #os.system(cmdline)
+    os.system(cmdline)
 
 # Combine all movies into a single mp4
 join_cmdline = "ffmpeg " \
@@ -46,7 +46,7 @@ join_cmdline = "ffmpeg " \
     + " -filter_complex \"" + "".join(["[{}:v:0]".format(i) \
         for i in range(args.num_mov)]) \
     + "hstack=inputs={}\" animations/sine_kicks.mp4".format(args.num_mov)
-#os.system(join_cmdline)
+os.system(join_cmdline)
 
 # Make shorter version of video for gif
 os.system("ffmpeg -ss 26 -i animations/sine_kicks.mp4 -c copy " \
