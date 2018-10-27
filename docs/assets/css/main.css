@@ -237,8 +237,13 @@
 	pre {
 		-webkit-overflow-scrolling: touch;
 		font-family: "Courier New", monospace;
-		font-size: 0.9em;
+		font-size: 1em;
 		margin: 0 0 2em 0;
+                white-space: pre-wrap;       /* Since CSS 2.1 */
+                white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+                white-space: -pre-wrap;      /* Opera 4-6 */
+                white-space: -o-pre-wrap;    /* Opera 7 */
+                word-wrap: break-word;       /* Internet Explorer 5.5+ */
 	}
 
 		pre code {
@@ -1520,6 +1525,36 @@
 				}
 
 		}
+
+
+/* Body */
+
+	#body {
+		padding: 4em 4em 2em 4em;
+		background-color: #ffffff;
+		border-radius: 4px;
+	}
+
+		#body > header:first-child {
+			text-align: center;
+		}
+
+		@media screen and (max-width: 736px) {
+
+			#body {
+				padding: 2em 2em 0.1em 2em;
+			}
+
+		}
+
+		@media screen and (max-width: 480px) {
+
+			#body {
+				padding: 2em 1em 0.1em 1em;
+			}
+
+		}
+
 
 /* Footer */
 

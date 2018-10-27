@@ -108,7 +108,7 @@
     this is because the different (spin-weighted spherical harmonic) modes
     combine with different weights based on the observer viewing angle.  Notice
     how the GW signal is strongest along the direction of orbital angular
-    momentum and weakest in perpendicular directions. 
+    momentum and weakest in perpendicular directions.
                         </p>
 
 
@@ -124,7 +124,7 @@
                         <p> Here the spins are aligned w.r.t the angular
     momentum direction, and there is no precession. Due to symmetries, the
     remnant spin is also aligned, while the remnant velocity is restricted to
-    the orbital plane. 
+    the orbital plane.
                         </p>
 
 
@@ -144,9 +144,6 @@
     black hole flies away compared to the above cases. </p>
 
 
-
-
-
                         <h3 id="sine_kicks"> Sinusoidal-kicks</h3>
 
                         <video width="100%" height="auto" controls autoplay>
@@ -161,6 +158,95 @@
                         </p>
 
                     </section>
+
+
+
+
+
+                <!-- Usage -->
+                    <section id="body" class="body">
+                        <header>
+                            <h2>Generating your own visualizations</h2>
+                        </header>
+
+                        <p> Since this package does not rely directly on
+    numerical simulations, you can generate new visualizations yourself, on
+    your laptop! These instructions have been tested for MacOS and Linux.
+                        </p>
+
+
+                        <h3>Prerequisites</h3>
+
+                        <p> This package relies on the surrogate models, <a target="_blank" href="https://pypi.org/project/NRSur7dq2"> NRSur7dq2 </a> and <a target="_blank" href="https://pypi.org/project/surfinBH"> surfinBH </a>. These can
+    be installed using pip.
+                        </p>
+
+                        <pre>
+    pip install NRSur7dq2
+    pip install surfinBH
+                        </pre>
+
+
+                        <h3>Download</h3>
+
+                        <p> Our package lives on 
+    <a target="_blank" href="https://github.com/vijayvarma392/black_hole_scattering">Github</a>, and can be obtained as follows. 
+                        </p>
+
+                        <pre>
+    git clone git@github.com:vijayvarma392/black_hole_scattering.git
+                        </pre>
+
+
+                        <h3>Usage</h3>
+
+                        <pre>
+    cd black_hole_scattering
+    python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+                        </pre>
+
+                        <p> For more options, do:
+                        </p>
+
+                        <pre>
+    python black_hole_scattering.py -h
+                        </pre>
+
+
+                        <h3>Examples</h3>
+
+                        <p> You can generate this 
+    <a href="#super_kick"> super-kick movie </a> with the following command:
+                        </p>
+
+                        <pre>
+python black_hole_scattering.py --q 1.34 --chiA 0.62 -0.27 0.34 --chiB -0.62 0.27 0.34 --wave_time_series --project_on_all_planes
+                        </pre>
+
+                        <p> You can generate this 
+    <a href="#prec_bbh"> precessing movie </a> with the following command:
+                        </p>
+
+                        <pre>
+python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes
+                        </pre>
+
+                        <p> You can generate this 
+    <a href="#prec_bbh_rotating_camera"> precessing movie with a varying
+    camera angle </a> with the following command:
+                        </p>
+
+                        <pre>
+python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera
+                        </pre>
+
+
+                    </section>
+
+                <!-- Footer -->
+                    <footer id="footer">
+                        <p class="copyright">&copy; VijayVarma2018. Design: <a href="https://templated.co">TEMPLATED</a>.</p>
+                    </footer>
 
             </div>
 
