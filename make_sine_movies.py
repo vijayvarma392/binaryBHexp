@@ -48,13 +48,13 @@ join_cmdline = "ffmpeg " \
     + "hstack=inputs={}\" animations/sine_kicks.mp4".format(args.num_mov)
 os.system(join_cmdline)
 
-# Make shorter version of video for gif
-os.system("ffmpeg -ss 26 -i animations/sine_kicks.mp4 -c copy " \
-    "%s/short_sine_kicks.mp4"%temp_dir)
-
-# Convert to gif
-# https://askubuntu.com/questions/648603/how-to-create-an-animated-gif-from-mp4-video-via-command-line
-os.system("ffmpeg -i %s/short_sine_kicks.mp4  -r 5 '%s"%(temp_dir, temp_dir) \
-        + "/frame-%04d.png'")
-os.system("convert -delay 20 -loop 0 %s/*.png animations/sine_kicks.gif"\
-    %temp_dir)
+### Make shorter version of video for gif
+##os.system("ffmpeg -ss 26 -i animations/sine_kicks.mp4 -c copy " \
+##    "%s/short_sine_kicks.mp4"%temp_dir)
+##
+### Convert to gif
+### https://askubuntu.com/questions/648603/how-to-create-an-animated-gif-from-mp4-video-via-command-line
+##os.system("ffmpeg -i %s/short_sine_kicks.mp4  -r 5 '%s"%(temp_dir, temp_dir) \
+##        + "/frame-%04d.png'")
+##os.system("convert -delay 20 -loop 0 %s/*.png animations/sine_kicks.gif"\
+##    %temp_dir)
