@@ -27,7 +27,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 import surfinBH
 import NRSur7dq2
-from gwtools import harmonics
+import harmonics
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
