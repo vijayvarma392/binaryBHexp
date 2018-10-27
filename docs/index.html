@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<!--
+    Epilogue by TEMPLATED
+    templated.co @templatedco
+    Released for free under the Creative Commons Attribution 3.0 license (templated.co/license)
+-->
+<html>
+    <head>
+        <title>Black hole scattering</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="assets/css/main.css" />
+    </head>
+    <body>
+
+        <!-- Header -->
+            <header id="header" class="alt">
+                <div class="inner">
+                    <h1>Black hole scattering</h1>
+                    <p>Visualization of precessing binary black hole evolution</p>
+                </div>
+            </header>
+
+        <!-- Wrapper -->
+            <div id="wrapper">
+
+                <!-- Banner -->
+                    <section id="intro" class="main">
+                        <h2>Introduction</h2>
+
+                        <p> When two black holes (BHs) interact, they spiral
+    towards each other and eventually merge, radiating gravitational waves in
+    the process. The end state is a single black hole that is only
+    characterized by its mass, angular momentum and linear momentum. Therefore,
+    this process can be thought of as a scattering process.
+                        </p>
+
+                        <p> Binary black hole scattering is a very complicated
+    process that requires numerical simulations to accurately predict the
+    outcome. These simulations are very expensive, taking about a month on a
+    super computer to run. In recent years, several "surrogate" models for
+    these simulations have been developed.  These models are trained against a
+    large number of numerical simulations, using some fancy interpolation
+    methods. In the end, the surrogate can reproduce the result of the
+    simulation as accurately as the simulation itself, but in a fraction of a
+    second, and on your laptop, rather than a month on a super computer!
+                        </p>
+
+                        <p> In this package, we use these surrogate models to
+    visualize the binary black hole scattering process. This has been done
+    before using numerical simulations, but there are only a finite number of
+    these simulations, at discrete points in the parameter space. With this
+    package, you can generate visualizations at any point in the parameter
+    space, in a few seconds, without needing to do a full numerical simulation!
+                        </p>
+
+                    </section>
+
+
+                <!-- Main -->
+                    <section id="main" class="main">
+                        <header>
+                            <h2>Visualizations</h2>
+                        </header>
+
+                        <p> Enough background, let's see some videos! </p>
+
+
+
+
+
+                        <h3 id="prec_bbh"> Precessing binary black hole</h3>
+
+                        <video width="450" height="auto" controls>
+                            <source src="../animations/precessing.mp4" type="video/mp4"> Your browser does not support the video tag.
+                        </video>
+
+                        <p> Here we see a precessing binary black hole merger.
+    The black holes are shown as circular markers, with arrows indicating their
+    spins. The orbital angular momentum direction is shown by the pink arrow at
+    the origin. The colors in the planes indicate the value of the plus
+    polarization of the GW as seen by an observer at that location; red means
+    positive and blue means negative, notice the quadrupolar pattern of the
+    radiation. In the plot at the bottom, we show the plus and cross
+    polarizations as seen from the camera viewing angle.  The BH spins are
+    misaligned w.r.t the angular momentum direction. Therefore, the spins, the
+    angular momentum, and the orbital plane all precess during the inspiral. It
+    is interesting to see how the remnant spin direction is very close to the
+    direction of the orbital angular momentum near merger.
+                        </p>
+
+
+
+
+
+                        <h4 id="prec_bbh_rotating_camera"> Precessing BBH with varying camera angle</h4>
+
+                        <video width="450" height="auto" controls>
+                            <source src="../animations/precessing_auto_rotate.mp4" type="video/mp4"> Your browser does not support the video tag.
+                        </video>
+
+
+                        <p> Here we show the same animation, but with a varying
+    camera angle. We project the wavefrom only on the bottom plane. In the plot
+    at the bottom we see how the waveform changes based on the viewing angle;
+    this is because the different modes (spin-weighted spherical harmonic
+    modes) combine with different weights based on the observer viewing angle.
+    Notice how the GW signal is strongest along the direction of orbital
+    angular momentum and weakest in perpendicular directions. 
+                        </p>
+
+
+
+
+
+
+                        <h3 id="aligned_bbh"> Aligned-spin binary black hole</h3>
+                        <video width="450" height="auto" controls>
+                            <source src="../animations/aligned.mp4" type="video/mp4"> Your browser does not support the video tag.
+                        </video>
+
+                        <p> Here the spins are aligned w.r.t the angular
+    momentum direction, and there is no precession. Due to symmetries, the
+    remnant spin is also aligned, while the remnant velocity is restricted to
+    the orbital plane. 
+                        </p>
+
+
+
+
+
+
+                        <h3 id="super_kick"> Super-kick</h3>
+
+                        <video width="450" height="auto" controls>
+                            <source src="../animations/super_kick.mp4" type="video/mp4"> Your browser does not support the video tag.
+                        </video>
+
+                        <p> In this case, notice how the spins line up in a
+    single plane close to the merger. This is believed to be necessary to cause
+    super-kicks, or very high remnant velocities. Notice how fast the final
+    black hole flies away compared to the above cases. </p>
+
+
+
+
+
+                        <h3 id="sine_kicks"> Sinusoidal-kicks</h3>
+
+                        <video width="100%" height="auto" controls>
+                            <source src="../animations/sine_kicks.mp4" type="video/mp4"> Your browser does not support the video tag.
+                        </video>
+
+                        <p> The kick velocity is very sensitive to the
+    orientation of the component spins near merger. Here we show several cases
+    where the spins have a fixed magnitude and are restricted to the orbital
+    plane, but the angle between them is varied.  Notice the sinusoidal nature
+    of the final kick magnitude.
+                        </p>
+
+                    </section>
+
+            </div>
+
+        <!-- Scripts -->
+            <script src="assets/js/jquery.min.js"></script>
+            <script src="assets/js/skel.min.js"></script>
+            <script src="assets/js/util.js"></script>
+            <script src="assets/js/main.js"></script>
+
+    </body>
+</html>
