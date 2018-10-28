@@ -1298,7 +1298,7 @@
 		-ms-flex-direction: column;
 		flex-direction: column;
 		padding: 8em 0 6em 0;
-		background-image: url("../../images/GW_banner.jpg");
+		background-image: url("../../images/banner.jpg");
 		background-size: cover;
 		background-position: center;
 		background-attachment: fixed;
@@ -1383,7 +1383,7 @@
 				padding: 0 0.5em 0.25em 0.5em;
 				border-bottom: solid 2px #ffffff;
 				font-weight: 200;
-				font-family: "Arial";
+				font-family: "Pacifico", cursive;
 				text-transform: none;
 				letter-spacing: 0;
 			}
