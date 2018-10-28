@@ -25,11 +25,11 @@
 	}
 
 	@media screen and (max-width: 480px) {
-
 		video {
                     width: 100%;
                     height: auto;
 		}
+        }
 
 	article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 		display: block;
