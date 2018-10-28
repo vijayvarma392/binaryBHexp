@@ -1380,10 +1380,10 @@
 				-webkit-transition: background-color 3s ease;
 				-ms-transition: background-color 3s ease;
 				transition: background-color 3s ease;
-				-moz-transition-delay: 1s;
-				-webkit-transition-delay: 1s;
-				-ms-transition-delay: 1s;
-				transition-delay: 1s;
+				-moz-transition-delay: 0.5s;
+				-webkit-transition-delay: 0.5s;
+				-ms-transition-delay: 0.5s;
+				transition-delay: 0.5s;
 			}
 
 			#header.alt h1 {
