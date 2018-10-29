@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 # Extract code version from __init__.py
 def get_version():
-    with open('binaryBHexp/binaryBHexp.py') as f:
+    with open('binaryBHexp/binaryBHexp') as f:
         for line in f.readlines():
             if "__version__" in line:
                 return line.split('"')[1]
@@ -33,6 +33,7 @@ setuptools.setup(
         'surfinBH',
         'NRSur7dq2>=1.0.5',
     ],
+    scripts=['binaryBHexp/binaryBHexp'],
     classifiers=[
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
