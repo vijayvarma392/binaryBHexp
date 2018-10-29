@@ -7,4 +7,9 @@ animations/*.png
 stills/
 tmp_*
 
+# pypi stuff
+build
+dist
+*.egg-info  
+
 make_sine_movies_script.sh
