@@ -8,7 +8,7 @@ Generates visualizations of a precessing binary black hole merger and the
 final remnant black hole.
 
 Example usage:
-./binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+./binaryBHexp --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
