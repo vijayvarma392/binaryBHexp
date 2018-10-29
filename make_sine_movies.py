@@ -27,7 +27,7 @@ temp_dir = 'tmp_sine_kicks'
 os.system('mkdir -p %s'%temp_dir)
 
 base_filename = "%s/sinus"%temp_dir
-cmdline_format = "python black_hole_scattering.py --q {:.2f} " \
+cmdline_format = "./binaryBHexp --q {:.2f} " \
     "--chiA {:.2f} {:.2f} {:.2f} --chiB {:.2f} {:.2f} {:.2f} " \
     "--save_file {}{}.mp4"
 
