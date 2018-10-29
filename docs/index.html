@@ -174,38 +174,50 @@
     your laptop! These instructions have been tested for MacOS and Linux.
                         </p>
 
+                        <h3>Installation</h3>
+
+                        <p> This package is available on <a target="_blank" href="https://pypi.org/project/binaryBHexp/">PyPI</a>, and can be installed using pip.
+                        </p>
+
+<pre><code>pip install binaryBHexp
+</code></pre>
+
+                         <p> You can also get the package from our
+    <a target="_blank" href="https://github.com/vijayvarma392/binaryBHexp">Github</a> repo as follows. 
+                        </p>
+
+<pre><code>git clone git@github.com:vijayvarma392/binaryBHexp.git
+cd binaryBHexp
+</code></pre> 
+
+
 
                         <h3>Prerequisites</h3>
 
-                        <p> This package relies on the surrogate models, <a target="_blank" href="https://pypi.org/project/NRSur7dq2"> NRSur7dq2 </a> and <a target="_blank" href="https://pypi.org/project/surfinBH"> surfinBH </a>. These can
-    be installed using pip.
+                        <p> This package relies on the surrogate models, <a target="_blank" href="https://pypi.org/project/NRSur7dq2"> NRSur7dq2 </a> and <a target="_blank" href="https://pypi.org/project/surfinBH"> surfinBH </a>. These are
+    automatically installed with the pip installation. For the Github version,
+    these can be installed using pip.
                         </p>
 
 <pre><code>pip install NRSur7dq2
 pip install surfinBH
 </code></pre>
 
-
-                        <h3>Download</h3>
-
-                        <p> Our package lives on 
-    <a target="_blank" href="https://github.com/vijayvarma392/binaryBHexp">Github</a>, and can be obtained as follows. 
-                        </p>
-
-<pre><code>git clone git@github.com:vijayvarma392/binaryBHexp.git
-</code></pre>
-
-
                         <h3>Usage</h3>
 
-<pre><code>cd binaryBHexp
-python binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+                        <p> If you installed the binaryBHexp package with pip,
+    you should be able to use the command line script as shown below. If you
+    are using the Github version, the script can be found in the repo, and you
+    need to replace binaryBHexp with ./binaryBHexp in the following.
+                        </p>
+
+<pre><code>binaryBHexp --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 </code></pre>
 
                         <p> For more options, do:
                         </p>
 
-<pre><code>python binaryBHexp.py -h
+<pre><code>binaryBHexp -h
 </code></pre>
 
 
@@ -215,14 +227,14 @@ python binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
     <a href="#super_kick"> super-kick movie </a> with the following command:
                         </p>
 
-<pre><code>python binaryBHexp.py --q 1.34 --chiA 0.62 -0.27 0.34 --chiB -0.62 0.27 0.34 --wave_time_series --project_on_all_planes
+<pre><code>binaryBHexp --q 1.34 --chiA 0.62 -0.27 0.34 --chiB -0.62 0.27 0.34 --wave_time_series --project_on_all_planes
 </code></pre>
 
                         <p> You can generate this 
     <a href="#prec_bbh"> precessing movie </a> with the following command:
                         </p>
 
-<pre><code>python binaryBHexp.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes
+<pre><code>binaryBHexp --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes
 </code></pre>
 
                         <p> You can generate this 
@@ -230,7 +242,7 @@ python binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
     camera angle </a> with the following command:
                         </p>
 
-<pre><code>python binaryBHexp.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera
+<pre><code>binaryBHexp --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera
 </code></pre>
 
 
