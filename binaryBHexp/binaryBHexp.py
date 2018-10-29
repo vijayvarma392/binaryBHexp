@@ -1,8 +1,12 @@
-desc = """Animations of binary black hole scattering.
-Generates an animation of a binary black hole merger and the final remnant.
+__doc__ = """binaryBHexp
+========
+
+Get the binary Black Hole experience, through visualizations.
+Generates visualizations of a precessing binary black hole merger and the
+final remnant black hole.
 
 Example usage:
-python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+python binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
 During the inspiral there are 30 frames per orbit.
@@ -16,6 +20,30 @@ The remnant properties are obtained from surfinBH.
 Links:
 NRSur7dq2: https://pypi.org/project/NRSur7dq2/
 surfinBH: https://pypi.org/project/surfinBH/
+"""
+__copyright__ = "Copyright (C) 2018 Vijay Varma"
+__email__ = "vvarma@caltech.edu"
+__status__ = "testing"
+__author__ = "Vijay Varma"
+__version__ = "0.0.0dev"
+__license__ = """
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
 
 import numpy as np
@@ -609,7 +637,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
 #----------------------------------------------------------------------------
-def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
+def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         draw_full_trajectory=False, project_on_all_planes=False, \
         height_map=False, wave_time_series=False, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
@@ -887,7 +915,7 @@ def BBH_scattering(fig, q, chiA, chiB, omega_ref=None, \
 #############################    main    ##################################
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description=desc,
+    parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--q', type=float, required=True,
         help='Mass ratio.')
@@ -941,7 +969,7 @@ if __name__ == '__main__':
             fig = P.figure(figsize=(5,4))
 
 
-    line_ani = BBH_scattering(fig, args.q, args.chiA, args.chiB,
+    line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
         omega_ref = args.omega_ref,
         draw_full_trajectory = args.draw_full_trajectory,
         height_map = args.height_map,
@@ -967,8 +995,8 @@ if __name__ == '__main__':
         metadata = {
             'artist' : 'Vijay Varma',
             'genre' : 'Physics',
-            'subject' : 'Animation of binary black hole scattering process.',
-            'copyright' : surfinBH.__copyright__,
+            'subject' : 'binaryBHexp: The binary Black Hole experience',
+            'copyright' : __copyright__,
             }
         writer = Writer(fps=15, metadata=metadata)
         if LOW_DEF or extension == 'gif':
