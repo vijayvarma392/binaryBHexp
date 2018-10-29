@@ -1,21 +1,7 @@
-desc = """Animations of binary black hole scattering.
-Generates an animation of a binary black hole merger and the final remnant.
+desc = """Animations of black hole spin evolution for precessing binary black holes.
 
 Example usage:
-python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
-
-Note: Time values displayed in the plot are non-uniform and non-linear:
-During the inspiral there are 30 frames per orbit.
-After the merger each frame corresponds to a time step of 100M.
-
-The precessing frame quaternion and phase is obtained from NRSur7dq2.
-The separation is estimated from 3.5PN relation between r and omega, and omega
-is obtained from NRSur7dq2.
-The remnant properties are obtained from surfinBH.
-
-Links:
-NRSur7dq2: https://pypi.org/project/NRSur7dq2/
-surfinBH: https://pypi.org/project/surfinBH/
+python precession_tracking.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 """
 
 import numpy as np
@@ -38,11 +24,11 @@ import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
 P.style.use('seaborn')
 
-import black_hole_scattering
+import binaryBHexp
 
-Arrow3D = black_hole_scattering.Arrow3D
-zorder_dict = black_hole_scattering.zorder_dict
-colors_dict = black_hole_scattering.colors_dict
+Arrow3D = binaryBHexp.Arrow3D
+zorder_dict = binaryBHexp.zorder_dict
+colors_dict = binaryBHexp.colors_dict
 
 #----------------------------------------------------------------------------
 def update_lines(num, lines, t, properties_text, time_text, q, mA, mB, \
@@ -55,12 +41,12 @@ def update_lines(num, lines, t, properties_text, time_text, q, mA, mB, \
         '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
         '$\chi_{B}=[%.2f, %.2f, %.2f]$\n' \
         '$r=%.2f\,M$\n'%(q, \
-        black_hole_scattering.make_zero_if_small(chiA_nrsur[num-1][0]), \
-        black_hole_scattering.make_zero_if_small(chiA_nrsur[num-1][1]), \
-        black_hole_scattering.make_zero_if_small(chiA_nrsur[num-1][2]), \
-        black_hole_scattering.make_zero_if_small(chiB_nrsur[num-1][0]), \
-        black_hole_scattering.make_zero_if_small(chiB_nrsur[num-1][1]), \
-        black_hole_scattering.make_zero_if_small(chiB_nrsur[num-1][2]), \
+        binaryBHexp.make_zero_if_small(chiA_nrsur[num-1][0]), \
+        binaryBHexp.make_zero_if_small(chiA_nrsur[num-1][1]), \
+        binaryBHexp.make_zero_if_small(chiA_nrsur[num-1][2]), \
+        binaryBHexp.make_zero_if_small(chiB_nrsur[num-1][0]), \
+        binaryBHexp.make_zero_if_small(chiB_nrsur[num-1][1]), \
+        binaryBHexp.make_zero_if_small(chiB_nrsur[num-1][2]), \
         separation[num-1]
         ))
 
@@ -100,7 +86,7 @@ def PrecessionTrack(fig, q, chiA, chiB, omega_ref=None, \
     chiA = np.array(chiA)
     chiB = np.array(chiB)
     t, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
-        BhB_traj, separation = black_hole_scattering.get_binary_data( \
+        BhB_traj, separation = binaryBHexp.get_binary_data( \
         q, chiA, chiB, omega_ref)
 
     sA = chiA_nrsur * mA**2
@@ -276,8 +262,8 @@ if __name__ == '__main__':
         metadata = {
             'artist' : 'Vijay Varma',
             'genre' : 'Physics',
-            'subject' : 'Animation of binary black hole scattering process.',
-            'copyright' : surfinBH.__copyright__,
+            'subject' : 'Black hole spin evolution for precessing BBH.',
+            'copyright' : binaryBHexp.__copyright__,
             }
         writer = Writer(fps=15, metadata=metadata)
         if extension == 'gif':

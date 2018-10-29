@@ -1,4 +1,4 @@
-""" Interactive widgets for running black_hole_scattering.py
+""" Interactive widgets for running binaryBHexp
 """
 import matplotlib
 matplotlib.use("TkAgg")
@@ -6,7 +6,7 @@ from matplotlib.widgets import Slider, Button
 import matplotlib.pyplot as P
 import numpy as np
 
-import black_hole_scattering
+import binaryBHexp
 
 
 def run_animation():
@@ -25,7 +25,7 @@ def run_animation():
     chiB = [chiBmag*np.sin(chiBth)*np.cos(chiBph),
             chiBmag*np.sin(chiBth)*np.sin(chiBph),
             chiBmag*np.cos(chiBth)]
-    ani = black_hole_scattering.BBH_scattering(fig, q, chiA, chiB, \
+    ani = binaryBHexp.BBH_animation(fig, q, chiA, chiB, \
         wave_time_series=True, auto_rotate_camera=False, \
         rescale_fig_for_widgets=True)
     return ani
