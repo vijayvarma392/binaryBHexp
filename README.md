@@ -1,5 +1,4 @@
-# Black hole scattering
-Visualization of the binary black hole scattering process.
+# binaryBHexp
+Get the binary Black Hole experience though visualizations.
 
-See our [webpage](https://vijayvarma392.github.io/black_hole_scattering/) for
-more details.
+See our [webpage](https://vijayvarma392.github.io/binaryBHexp/) for more details.
