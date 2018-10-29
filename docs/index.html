@@ -6,7 +6,7 @@
 -->
 <html>
     <head>
-        <title>Black hole scattering</title>
+        <title>Vijay Varma | Binary black hole experience</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="assets/css/main.css" />
@@ -16,7 +16,7 @@
         <!-- Header -->
             <header id="header" class="alt">
                 <div class="inner">
-                    <h1>Black hole scattering</h1>
+                    <h1>Binary black hole experience</h1>
                     <h3 style="text-transform: none;">Visualization of precessing binary black hole evolutions</h3>
                 </div>
             </header>
@@ -28,30 +28,30 @@
                     <section id="intro" class="main">
                         <h2>Introduction</h2>
 
-                        <p> When two black holes (BHs) interact, they spiral
-    towards each other and eventually merge, radiating gravitational waves in
-    the process. The end state is a single black hole that is only
-    characterized by its mass, angular momentum and linear momentum. Therefore,
-    this process can be thought of as a scattering process.
+                        <p> When two black holes (BHs) interact, they lose
+    energy through gravitational waves and spiral towards each other. They
+    eventually merge to give rise to a single black hole. The final black hole
+    is characterized only by its mass, spin, and velocity (also called recoil
+    kick or simply, kick).
                         </p>
 
-                        <p> Binary black hole scattering is a very complicated
-    process that requires numerical simulations to accurately predict the
-    outcome. These simulations are very expensive, taking about a month on a
-    super computer to run. In recent years, several "surrogate" models for
-    these simulations have been developed.  These models are trained against a
-    large number of numerical simulations, using some fancy interpolation
-    methods. In the end, the surrogate can reproduce the result of the
-    simulation as accurately as the simulation itself, but in a fraction of a
-    second, and on your laptop, rather than a month on a super computer!
+                        <p> The merger of binary black holes (BBHs) is a very
+    complicated process that requires numerical simulations to accurately
+    predict the outcome. These simulations are very expensive, taking about a
+    month on a super computer to run. In recent years, several "surrogate"
+    models for these simulations have been developed.  These models are trained
+    against a large number of numerical simulations, using some fancy
+    interpolation methods. In the end, the surrogate can reproduce the result
+    of the simulation as accurately as the simulation itself, but in a fraction
+    of a second, and on your laptop, rather than a month on a super computer!
                         </p>
 
                         <p> In this package, we use these surrogate models to
-    visualize the binary black hole scattering process. You can now generate
+    visualize the evolution of binary black hole systems. You can now generate
     visualizations at any point in the parameter space, in a few seconds,
-    without needing to do a full numerical simulation! More details about
-    binary black holes scattering and how these visualizations are generated
-    can be found in our (upcoming) paper arxiv.xxxx.xxxx.
+    without needing to do a full numerical simulation! More details about about
+    how these visualizations are generated can be found in our (upcoming) paper
+    arxiv.xxxx.xxxx.
                         </p>
 
                     </section>
@@ -189,23 +189,23 @@ pip install surfinBH
                         <h3>Download</h3>
 
                         <p> Our package lives on 
-    <a target="_blank" href="https://github.com/vijayvarma392/black_hole_scattering">Github</a>, and can be obtained as follows. 
+    <a target="_blank" href="https://github.com/vijayvarma392/binaryBHexp">Github</a>, and can be obtained as follows. 
                         </p>
 
-<pre><code>git clone git@github.com:vijayvarma392/black_hole_scattering.git
+<pre><code>git clone git@github.com:vijayvarma392/binaryBHexp.git
 </code></pre>
 
 
                         <h3>Usage</h3>
 
-<pre><code>cd black_hole_scattering
-python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+<pre><code>cd binaryBHexp
+python binaryBHexp.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 </code></pre>
 
                         <p> For more options, do:
                         </p>
 
-<pre><code>python black_hole_scattering.py -h
+<pre><code>python binaryBHexp.py -h
 </code></pre>
 
 
@@ -215,14 +215,14 @@ python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
     <a href="#super_kick"> super-kick movie </a> with the following command:
                         </p>
 
-<pre><code>python black_hole_scattering.py --q 1.34 --chiA 0.62 -0.27 0.34 --chiB -0.62 0.27 0.34 --wave_time_series --project_on_all_planes
+<pre><code>python binaryBHexp.py --q 1.34 --chiA 0.62 -0.27 0.34 --chiB -0.62 0.27 0.34 --wave_time_series --project_on_all_planes
 </code></pre>
 
                         <p> You can generate this 
     <a href="#prec_bbh"> precessing movie </a> with the following command:
                         </p>
 
-<pre><code>python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes
+<pre><code>python binaryBHexp.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --project_on_all_planes
 </code></pre>
 
                         <p> You can generate this 
@@ -230,7 +230,7 @@ python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
     camera angle </a> with the following command:
                         </p>
 
-<pre><code>python black_hole_scattering.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera
+<pre><code>python binaryBHexp.py --q 2 --chiA 0.3 0.7 -0.1 --chiB 0.3 0.6 0.1 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera
 </code></pre>
 
 
@@ -252,7 +252,7 @@ python black_hole_scattering.py --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
                         <p> Please credit me and cite our (upcoming) paper
     (arxiv.xxxx.xxxx) if you use these visualizations in your work,
     presentations or outreach. Please report bugs on our
-    <a target="_blank" href="https://github.com/vijayvarma392/black_hole_scattering">Github repository</a>.
+    <a target="_blank" href="https://github.com/vijayvarma392/binaryBHexp">Github repository</a>.
                         </p>
 
                     </section>
