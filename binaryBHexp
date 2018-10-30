@@ -476,7 +476,7 @@ def get_waveform_timeseries(h_dict, azim, elev):
     """
     ph = azim * np.pi/180.
     th = (90. - elev) * np.pi/180.
-    h = np.zeros_like(h_dict[h_dict.keys()[0]], dtype=complex)
+    h = np.zeros_like(h_dict[list(h_dict.keys())[0]], dtype=complex)
     for key in h_dict.keys():
         ell, m = key
         ylm = harmonics(-2, ell, m, th, ph)
