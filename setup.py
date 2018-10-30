@@ -21,7 +21,7 @@ setuptools.setup(
     version=get_version(),
     author="Vijay Varma",
     author_email="vvarma@caltech.edu",
-    description="Get the binary Black Hole experience, through visualizations.",
+    description="The binary Black Hole explorer (visualizations).",
     keywords='black-holes gravitational-waves visualization',
     long_description=long_description,
     long_description_content_type="text/markdown",

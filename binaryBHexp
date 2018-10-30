@@ -3,7 +3,7 @@
 __doc__ = """binaryBHexp
 ========
 
-Get the binary Black Hole experience, through visualizations.
+The binary Black Hole explorer.
 Generates visualizations of a precessing binary black hole merger and the
 final remnant black hole.
 
@@ -1087,7 +1087,7 @@ if __name__ == '__main__':
         metadata = {
             'artist' : 'Vijay Varma',
             'genre' : 'Physics',
-            'subject' : 'binaryBHexp: The binary Black Hole experience',
+            'subject' : 'binaryBHexp: The binary Black Hole explorer',
             'copyright' : __copyright__,
             }
         writer = Writer(fps=15, metadata=metadata)
