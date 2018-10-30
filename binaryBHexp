@@ -11,17 +11,8 @@ Example usage:
 ./binaryBHexp --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
 Note: Time values displayed in the plot are non-uniform and non-linear:
-During the inspiral there are 30 frames per orbit.
-After the merger each frame corresponds to a time step of 100M.
-
-The precessing frame quaternion and phase is obtained from NRSur7dq2.
-The separation is estimated from 3.5PN relation between r and omega, and omega
-is obtained from NRSur7dq2.
-The remnant properties are obtained from surfinBH.
-
-Links:
-NRSur7dq2: https://pypi.org/project/NRSur7dq2/
-surfinBH: https://pypi.org/project/surfinBH/
+During the inspiral-merger-ringdown there are 30 frames per orbit.
+After the ringdown each frame corresponds to a time step of 100M.
 """
 __copyright__ = "Copyright (C) 2018 Vijay Varma"
 __email__ = "vvarma@caltech.edu"
@@ -1016,14 +1007,23 @@ if __name__ == '__main__':
     parser.add_argument('--chiB', type=float, required=True, nargs=3,
         help='Dimensionless spin of BhB at omega_ref. List of size 3.')
     parser.add_argument('--omega_ref', type=float, default=None,
-        help='Orbital frequency at which the spins are specified. In units ' \
-            'of rad/M. Currently, >= 0.018. If not specified, assumes the ' \
-            'spins are specified at t=-100M from the peak of the waveform.')
+        help='Reference orbital frequency, in units ' \
+            'of rad/M. Currently, >= 0.018. If specified, assumes the above ' \
+            'spins are specified at this frequency, in the coorbital frame. ' \
+            'Else, assumes the spins are specified at t=-100M from the peak ' \
+            'of the waveform, in the coorbital frame. ' \
+            'The coorbital frame is defined as: ' \
+            'The z-axis is along the orbital angular momentum at that ' \
+            'time/frequency. '\
+            'The x-axis is along the line of separation from the smaller BH ' \
+            'to the larger BH at that time/frequency. ' \
+            'The y-axis completes the triad. ' \
+            )
     parser.add_argument('--save_file', type=str, default=None,
         help='File to save animation to. If given, will save animation to ' \
-                'this file. Else will show animation. Allowed extensions are ' \
-                'mp4 and gif. mp4 has the best quality. We use lower quality ' \
-                'for gif to reduce file size.')
+            'this file. Else will show animation. Allowed extensions are ' \
+            'mp4 and gif. mp4 has the best quality. We use lower quality ' \
+            'for gif to reduce file size. Example: --save_file movie.mp4')
     parser.add_argument('--project_on_all_planes', default=False, \
         action='store_true', \
         help='If given, projects the waveform on all three back planes. ' \
