@@ -17,12 +17,16 @@ cmdline_format = "./binaryBHexp --q {:.2f} " \
 cmdline = cmdline_format.format(q, chi_mag, chi_mag, "hangup_aligned")
 os.system(cmdline)
 
+cmdline = cmdline_format.format(q, 0, 0, "hangup_nonspin")
+os.system(cmdline)
+
 cmdline = cmdline_format.format(q, -chi_mag, -chi_mag, "hangup_antialigned")
 os.system(cmdline)
 
 # Combine into a single mp4
 join_cmdline = "ffmpeg -i animations/hangup_aligned.mp4 " \
+    + "-i animations/hangup_nonspin.mp4 " \
     + "-i animations/hangup_antialigned.mp4 " \
-    + "-filter_complex \"[0:v:0][1:v:0]hstack=inputs=2\" " \
+    + "-filter_complex \"[0:v:0][1:v:0][2:v:0]hstack=inputs=3\" " \
     + "animations/hangup.mp4"
 os.system(join_cmdline)
