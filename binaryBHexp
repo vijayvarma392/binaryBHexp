@@ -502,7 +502,8 @@ def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
 
 
 #----------------------------------------------------------------------------
-def get_binary_data(q, chiA, chiB, omega_ref):
+def get_binary_data(q, chiA, chiB, omega_ref, omega_start, \
+        uniform_time_step_size=False):
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
@@ -514,12 +515,15 @@ def get_binary_data(q, chiA, chiB, omega_ref):
     t_ref = -100 if omega_ref is None else None
 
     # get NRSur dynamics
-    quat_nrsur, orbphase_nrsur, _, _ \
-        = nr_sur.get_dynamics(q, chiA, chiB, omega_ref=omega_ref, t_ref=t_ref, \
-        allow_extrapolation=True)
+    quat_nrsur, orbphase_nrsur, _, _ = nr_sur.get_dynamics(q, chiA, chiB, \
+        omega_ref=omega_ref, t_ref=t_ref, allow_extrapolation=True)
 
-    t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
-        PTS_PER_ORBIT)
+    if uniform_time_step_size is None:
+        t_binary = get_uniform_in_orbits_times(nr_sur.tds, orbphase_nrsur, \
+            PTS_PER_ORBIT)
+    else:
+        t_binary = np.arange(nr_sur.tds[0], nr_sur.tds[-1], \
+            uniform_time_step_size)
 
     if LOW_DEF:
         t_binary = t_binary[t_binary > -3000]
@@ -554,6 +558,20 @@ def get_binary_data(q, chiA, chiB, omega_ref):
     # Get component trajectories
     BhA_traj = get_trajectory(separation * mB, quat_nrsur, orbphase_nrsur, 'A')
     BhB_traj = get_trajectory(separation * mA, quat_nrsur, orbphase_nrsur, 'B')
+
+    # If omega_start is given, retain only higher frequencies
+    if omega_start is not None:
+        start_idx = np.argmin(np.abs(omega_nrsur - omega_start))
+
+        t_binary = t_binary[start_idx:]
+        chiA_nrsur = chiA_nrsur[start_idx:]
+        chiB_nrsur = chiB_nrsur[start_idx:]
+        L = L[start_idx:]
+        BhA_traj = BhA_traj.T[start_idx:].T
+        BhB_traj = BhB_traj.T[start_idx:].T
+        separation = separation[start_idx:]
+        for key in h_nrsur.keys():
+            h_nrsur[key] = h_nrsur[key][start_idx:]
 
     return t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
         BhB_traj, separation
@@ -726,12 +744,14 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         height_map=False, wave_time_series=False, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
         rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
+        omega_start=None, uniform_time_step_size=False, \
         stop_after_ringdown=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
     t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
-        BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref)
+        BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
+        omega_start, uniform_time_step_size=uniform_time_step_size)
 
     max_range = np.nanmax(separation)
 
@@ -972,6 +992,11 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
 
+    ## Use this if you want to speed up the movie when using a low
+    ## uniform_time_step_size
+    #frames = np.sort(np.append(range(1, len(t))[::5], np.argmin(np.abs(t))))
+    #hist_frames = 100
+
     if not no_freeze_near_merger:
         # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
         frames = np.sort(np.append(frames, [freeze_idx]*75))
@@ -1002,19 +1027,25 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
     return line_ani
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, \
+        argparse.RawDescriptionHelpFormatter):
+    pass
 
 #############################    main    ##################################
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--q', type=float, required=True,
+        formatter_class=CustomFormatter)
+
+    pp_standard = parser.add_argument_group("Standard options")
+
+    pp_standard.add_argument('--q', type=float, required=True,
         help='Mass ratio.')
-    parser.add_argument('--chiA', type=float, required=True, nargs=3,
+    pp_standard.add_argument('--chiA', type=float, required=True, nargs=3,
         help='Dimensionless spin of BhA at omega_ref. List of size 3.')
-    parser.add_argument('--chiB', type=float, required=True, nargs=3,
+    pp_standard.add_argument('--chiB', type=float, required=True, nargs=3,
         help='Dimensionless spin of BhB at omega_ref. List of size 3.')
-    parser.add_argument('--omega_ref', type=float, default=None,
+    pp_standard.add_argument('--omega_ref', type=float, default=None,
         help='Reference orbital frequency, in units ' \
             'of rad/M. Currently, >= 0.018. If specified, assumes the above ' \
             'spins are specified at this frequency, in the coorbital frame. ' \
@@ -1027,41 +1058,59 @@ if __name__ == '__main__':
             'to the larger BH at that time/frequency. ' \
             'The y-axis completes the triad. ' \
             )
-    parser.add_argument('--save_file', type=str, default=None,
+    pp_standard.add_argument('--save_file', type=str, default=None,
         help='File to save animation to. If given, will save animation to ' \
             'this file. Else will show animation. Allowed extensions are ' \
             'mp4 and gif. mp4 has the best quality. We use lower quality ' \
             'for gif to reduce file size. Example: --save_file movie.mp4')
-    parser.add_argument('--project_on_all_planes', default=False, \
+    pp_standard.add_argument('--project_on_all_planes', default=False, \
         action='store_true', \
         help='If given, projects the waveform on all three back planes. ' \
         'By default only does the x-y plane at the bottom.')
-    parser.add_argument('--height_map', default=False, action='store_true', \
-        help='Map h to a height to visualize in the xy plane ' \
-        'instead of a contour plot.  Turns off project_on_all_planes.')
-    parser.add_argument('--wave_time_series', default=False, \
+    pp_standard.add_argument('--wave_time_series', default=False, \
         action='store_true', \
         help='Plots an interactive waveform time series at the bottom. The ' \
         'waveform changes based on viewing angle. This disables ' \
         'pause-on-click.')
-    parser.add_argument('--auto_rotate_camera', default=False, \
+    pp_standard.add_argument('--auto_rotate_camera', default=False, \
         action='store_true', \
         help='Auto rotates camera viewing angle. This turns off ' \
         'project_on_all_planes. Particularly nice with wave_time_series set.')
-    parser.add_argument('--draw_full_trajectory', default=False, \
+
+    pp_special = parser.add_argument_group( \
+        "Non standard options (mainly for developers)")
+
+    pp_special.add_argument('--height_map', default=False, \
+        action='store_true', \
+        help='Map h to a height to visualize in the xy plane ' \
+        'instead of a contour plot.  Turns off project_on_all_planes.')
+    pp_special.add_argument('--draw_full_trajectory', default=False, \
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
-    parser.add_argument('--no_freeze_near_merger', default=False, \
+    pp_special.add_argument('--no_freeze_near_merger', default=False, \
         action='store_true', \
         help='Normally the movie is frozen close to merger for a few ' \
         'seconds. This option disables this feature.')
-    parser.add_argument('--stop_after_ringdown', default=False, \
+    pp_special.add_argument('--stop_after_ringdown', default=False, \
         action='store_true', \
         help='Normally the movie is sped-up after the ringdown to ' \
         'exaggerate the kicks. This option stops the movie at the end of ' \
         'ringdown.')
-    parser.add_argument('--still_time', default=None, type=float, \
+    pp_special.add_argument('--omega_start', type=float, default=None,
+        help='Starting orbital frequency, in units of rad/M. ' \
+            'Currently, >= 0.018. This is different from omega_ref, and ' \
+            'instead controls the length of the visualization and the ' \
+            'waveform by starting the visualization at this orbital ' \
+            'frequency. ' \
+            )
+    pp_special.add_argument('--uniform_time_step_size', type=float, \
+        default=None, \
+        help='Normally the movie time steps are uniform in orbital phase. ' \
+        'This ensures it slows down appropriately near merger. This option ' \
+        'disables this feature, instead the movie time steps are uniform ' \
+        'in simulation time, with a step size=uniform_time_step_size.')
+    pp_special.add_argument('--still_time', default=None, type=float, \
         help='If given, saves a plot of the movie at this time and exits.')
 
     args = parser.parse_args()
@@ -1088,6 +1137,8 @@ if __name__ == '__main__':
         save_file = args.save_file,
         no_freeze_near_merger = args.no_freeze_near_merger,
         stop_after_ringdown = args.stop_after_ringdown,
+        omega_start = args.omega_start,
+        uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time)
 
     if args.save_file is not None:
