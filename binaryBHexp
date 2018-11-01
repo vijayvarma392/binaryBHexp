@@ -575,15 +575,16 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        wave_time_series):
+        wave_time_series, no_freeze_near_merger):
     """ The function that goes into animation
     """
     current_time = t[num]
     time_text.set_text('$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
-        # Add text about freezing before freezing
-        freeze_text.set_text('Freezing video')
+        if not no_freeze_near_merger:
+            # Add text about freezing before freezing
+            freeze_text.set_text('Freezing video')
     if num == freeze_idx + 1:
         # Clear text about freezing after freezing
         freeze_text.set_text('')
@@ -724,7 +725,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         draw_full_trajectory=False, project_on_all_planes=False, \
         height_map=False, wave_time_series=False, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
-        rescale_fig_for_widgets=False):
+        rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
+        stop_after_ringdown=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -753,14 +755,18 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     #print(np.linalg.norm(vf))
     #print(np.linalg.norm(vf) * 3 * 10**5)
 
-    # Will stop plotting waveform after this time
-    # long enough for waveform pattern to disappear, taking into account
-    # propagation delay
-    waveform_end_time = 50 + 2*max_range
+    if not stop_after_ringdown:
+        # Will stop plotting waveform after this time
+        # long enough for waveform pattern to disappear, taking into account
+        # propagation delay
+        waveform_end_time = 50 + 2*max_range
 
-    # common time array: After waveform_end_time, each step is 100M
-    t = np.append(t_binary[t_binary<waveform_end_time], \
-        np.arange(waveform_end_time, 10000+waveform_end_time, 100))
+        # common time array: After waveform_end_time, each step is 100M
+        t = np.append(t_binary[t_binary<waveform_end_time], \
+            np.arange(waveform_end_time, 10000+waveform_end_time, 100))
+    else:
+        waveform_end_time = 100
+        t = t_binary[t_binary<waveform_end_time]
 
     # assume merger is at origin
     BhC_traj = np.array([tmp*t for tmp in vf])
@@ -965,8 +971,10 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
-    # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
-    frames = np.sort(np.append(frames, [freeze_idx]*75))
+
+    if not no_freeze_near_merger:
+        # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
+        frames = np.sort(np.append(frames, [freeze_idx]*75))
 
     fargs = (lines, hist_frames, t, t_binary, dataLines_binary, \
             dataLines_remnant, properties_text, freeze_text, timestep_text, \
@@ -975,7 +983,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
-            project_on_all_planes, wave_time_series)
+            project_on_all_planes, wave_time_series, no_freeze_near_merger)
 
     # save still and exit
     if still_time is not None:
@@ -1044,6 +1052,15 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
+    parser.add_argument('--no_freeze_near_merger', default=False, \
+        action='store_true', \
+        help='Normally the movie is frozen close to merger for a few ' \
+        'seconds. This option disables this feature.')
+    parser.add_argument('--stop_after_ringdown', default=False, \
+        action='store_true', \
+        help='Normally the movie is sped-up after the ringdown to ' \
+        'exaggerate the kicks. This option stops the movie at the end of ' \
+        'ringdown.')
     parser.add_argument('--still_time', default=None, type=float, \
         help='If given, saves a plot of the movie at this time and exits.')
 
@@ -1069,6 +1086,8 @@ if __name__ == '__main__':
         wave_time_series = args.wave_time_series,
         auto_rotate_camera = args.auto_rotate_camera,
         save_file = args.save_file,
+        no_freeze_near_merger = args.no_freeze_near_merger,
+        stop_after_ringdown = args.stop_after_ringdown,
         still_time = args.still_time)
 
     if args.save_file is not None:
