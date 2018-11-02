@@ -31,6 +31,10 @@ cmdline_format = "./binaryBHexp --q {:.2f} " \
     "--chiA {:.2f} {:.2f} {:.2f} --chiB {:.2f} {:.2f} {:.2f} " \
     "--save_file {}{}.mp4"
 
+# for making stills
+still_times = [-2000, -100, 0, 2280]
+still_cmdline_app_fmt = " --no_time_label --still_time {:.2f}"
+
 # Generate individual movies
 for i, alpha in enumerate(alphas):
     chiA = chi_mag * np.array([np.cos(alpha), np.sin(alpha), 0])
@@ -38,6 +42,9 @@ for i, alpha in enumerate(alphas):
     cmdline = cmdline_format.format(q, chiA[0], chiA[1], chiA[2], \
         chiB[0], chiB[1], chiB[2], base_filename, i)
     os.system(cmdline)
+    for time in still_times:
+        still_cmdline = cmdline + still_cmdline_app_fmt.format(time)
+        os.system(still_cmdline)
 
 # Combine all movies into a single mp4
 join_cmdline = "ffmpeg " \
