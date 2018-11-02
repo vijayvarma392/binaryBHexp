@@ -502,8 +502,8 @@ def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
 
 
 #----------------------------------------------------------------------------
-def get_binary_data(q, chiA, chiB, omega_ref, omega_start, \
-        uniform_time_step_size=False):
+def get_binary_data(q, chiA, chiB, omega_ref, omega_start=None, \
+        uniform_time_step_size=None):
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
@@ -745,14 +745,14 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         height_map=False, wave_time_series=False, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
         rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
-        omega_start=None, uniform_time_step_size=False, \
+        omega_start=None, uniform_time_step_size=None, \
         stop_after_ringdown=False, no_time_label=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
     t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
         BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
-        omega_start, uniform_time_step_size=uniform_time_step_size)
+        omega_start=omega_start, uniform_time_step_size=uniform_time_step_size)
 
     max_range = np.nanmax(separation)
 
