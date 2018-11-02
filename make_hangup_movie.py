@@ -12,6 +12,7 @@ chi_mag = 0.8
 cmdline_format = "./binaryBHexp --q {:.2f} " \
     "--chiA 0 0 {:.2f} --chiB 0 0 {:.2f} --omega_start 1.8e-2 " \
     "--wave_time_series --no_freeze_near_merger --stop_after_ringdown " \
+    "--no_time_label " \
     "--uniform_time_step_size 1 --save_file animations/{}.mp4"
 
 # Generate individual movies
