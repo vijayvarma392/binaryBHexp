@@ -593,11 +593,12 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        wave_time_series, no_freeze_near_merger):
+        wave_time_series, no_freeze_near_merger, no_time_label):
     """ The function that goes into animation
     """
     current_time = t[num]
-    time_text.set_text('$t=%.1f\,M$'%current_time)
+    if not no_time_label:
+        time_text.set_text('$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
         if not no_freeze_near_merger:
@@ -745,7 +746,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
         rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
         omega_start=None, uniform_time_step_size=False, \
-        stop_after_ringdown=False):
+        stop_after_ringdown=False, no_time_label=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -1008,7 +1009,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
-            project_on_all_planes, wave_time_series, no_freeze_near_merger)
+            project_on_all_planes, wave_time_series, no_freeze_near_merger, \
+            no_time_label)
 
     # save still and exit
     if still_time is not None:
@@ -1102,8 +1104,7 @@ if __name__ == '__main__':
             'Currently, >= 0.018. This is different from omega_ref, and ' \
             'instead controls the length of the visualization and the ' \
             'waveform by starting the visualization at this orbital ' \
-            'frequency. ' \
-            )
+            'frequency.')
     pp_special.add_argument('--uniform_time_step_size', type=float, \
         default=None, \
         help='Normally the movie time steps are uniform in orbital phase. ' \
@@ -1112,6 +1113,9 @@ if __name__ == '__main__':
         'in simulation time, with a step size=uniform_time_step_size.')
     pp_special.add_argument('--still_time', default=None, type=float, \
         help='If given, saves a plot of the movie at this time and exits.')
+    pp_special.add_argument('--no_time_label', default=False, \
+        action='store_true', \
+        help='Do not show the current time in the figtext.')
 
     args = parser.parse_args()
     if args.height_map or args.auto_rotate_camera:
@@ -1139,7 +1143,8 @@ if __name__ == '__main__':
         stop_after_ringdown = args.stop_after_ringdown,
         omega_start = args.omega_start,
         uniform_time_step_size = args.uniform_time_step_size,
-        still_time = args.still_time)
+        still_time = args.still_time,
+        no_time_label = args.no_time_label)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
