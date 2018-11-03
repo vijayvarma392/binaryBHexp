@@ -162,7 +162,7 @@ class Arrow3D(FancyArrowPatch):
         zs = [z, z+w*scale_factor]
         self._verts3d = xs, ys, zs
 
-    def set_angular_momentum_arrow(self, L, scale_factor=10):
+    def set_angular_momentum_arrow(self, L, scale_factor=15):
         #Place the base at center.
         xs = [0, L[0]*scale_factor]
         ys = [0, L[1]*scale_factor]
@@ -797,7 +797,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
         omega_start=omega_start, uniform_time_step_size=uniform_time_step_size)
 
-    max_range = np.nanmax(separation)/2.
+    max_range = np.nanmax(np.linalg.norm(BhB_traj, axis=0))
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
