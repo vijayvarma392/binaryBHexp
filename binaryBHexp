@@ -133,9 +133,9 @@ zorder_dict = {
         'info_text': 200,
         'notice_text': 100,
         'traj': 100,
-        'Bh': 110,
+        'Bh': 150,
         'spin': 200,
-        'L': 110,
+        'L': 150,
         'J': 90,
         }
 
@@ -151,7 +151,7 @@ class Arrow3D(FancyArrowPatch):
         zs = [0, vec[2]]
         self._verts3d = xs, ys, zs
 
-    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=20):
+    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=10):
         """
         The length of the arrow is proportinal to Kerr parameter (a) of the BH.
         """
@@ -162,7 +162,7 @@ class Arrow3D(FancyArrowPatch):
         zs = [z, z+w*scale_factor]
         self._verts3d = xs, ys, zs
 
-    def set_angular_momentum_arrow(self, L, scale_factor=25):
+    def set_angular_momentum_arrow(self, L, scale_factor=10):
         #Place the base at center.
         xs = [0, L[0]*scale_factor]
         ys = [0, L[1]*scale_factor]
@@ -180,7 +180,69 @@ class Arrow3D(FancyArrowPatch):
             FancyArrowPatch.draw(self, renderer)
 
 
+#----------------------------------------------------------------------------
+def quat_between_vecs(u, v):
+    """ Computes quaternion for rotation from one vector to another
+    """
 
+    def normalize(v):
+        return v/np.linalg.norm(v)
+
+    def quat_fromaxisangle(axis, angle):
+        half_sin = np.sin(0.5 * angle)
+        half_cos = np.cos(0.5 * angle)
+        return np.array([half_cos, \
+            half_sin*axis[0], \
+            half_sin*axis[1], \
+            half_sin*axis[2]])
+
+    axis = normalize(np.cross(u, v))
+    angle = np.arccos(np.dot(normalize(u), normalize(v)))
+    return quat_fromaxisangle(axis, angle)
+
+
+#----------------------------------------------------------------------------
+def draw_black_hole(ax, center, mass, chi):
+    """ Draws an ellipsoid according Kerr-Schild horizon for a BH.
+    """
+
+    a_Kerr = mass*np.linalg.norm(chi)
+    rplus = mass + np.sqrt(mass**2 - a_Kerr**2)
+    equitorial_rad = np.sqrt(rplus**2 + a_Kerr**2)
+    polar_rad = rplus
+
+    # ellipsoid at origin
+    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+    x = equitorial_rad*np.cos(u)*np.sin(v)
+    y = equitorial_rad*np.sin(u)*np.sin(v)
+    z = polar_rad*np.cos(v)
+
+    # rotate ellipsoid such that poles are along spin direction
+    if np.linalg.norm(chi) > 1e-6:   # can't do norms, but don't need rotation
+
+        # flatten meshgrid
+        coords = np.vstack([x.ravel(), y.ravel(), z.ravel()])
+
+        # rotate ellipsoid
+        quat = quat_between_vecs([0,0,1], chi)
+        coords = surfinBH._utils.transformTimeDependentVector(quat, coords, \
+            inverse=0)
+
+        # unflatten to get meshgrid again
+        x = coords[0].reshape(u.shape)
+        y = coords[1].reshape(u.shape)
+        z = coords[2].reshape(u.shape)
+
+    # shift center
+    x += center[0]
+    y += center[1]
+    z += center[2]
+
+    ax.plot_surface(x, y, z, color='k', linewidth=0, alpha=0.9, \
+        zorder=zorder_dict['Bh'])
+
+
+#----------------------------------------------------------------------------
 def harmonics(ss, ll, mm, theta, phi):
     """
     # spin-weighted spherical harmonics
@@ -345,18 +407,6 @@ def get_omegaOrb_from_sparse_data(t_sparse, phiOrb_sparse):
     omegaOrb_spl = phiOrb_spl.derivative()
 
     return omegaOrb_spl(t_sparse)
-
-#----------------------------------------------------------------------------
-def get_marker_size(mass, chi):
-    """ Marker size proportional to the Kerr horizon radius """
-    if LOW_DEF:
-        scale_factor = 15
-    else:
-        scale_factor = 30
-
-    chimag = np.sqrt(np.sum(chi**2))
-    rplus = mass + mass*np.sqrt(1 - chimag**2)
-    return rplus * scale_factor
 
 #----------------------------------------------------------------------------
 def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat, pnorder=3.5):
@@ -608,13 +658,14 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         # Clear text about freezing after freezing
         freeze_text.set_text('')
 
+    ax.collections = []     # It becomes very slow without this
+
     if current_time < waveform_end_time:
         # Plot the waveform on the back planes
         if project_on_all_planes:
             hplusX = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridX)
             hplusY = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridY)
         hplusZ = get_waveform_on_grid(t, num-1, h_nrsur, sph_gridZ)
-        ax.collections = []     # It becomes very slow without this
         norm=colors.SymLogNorm(linthresh=linthresh, linscale=1, \
             vmin=vmin, vmax=vmax)
         if project_on_all_planes:
@@ -641,9 +692,6 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         if num < 2:
             # Clear remnant stuff
             line = lines[len(dataLines_binary)]
-            line.set_data([], [])
-            line.set_3d_properties([])
-            line = lines[len(dataLines_binary)+1]
             line.reset()
             timestep_text.set_text('')
 
@@ -659,42 +707,41 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             ))
 
 
+        # draw ellipsoids for BHs
+        draw_black_hole(ax, BhA_traj[:,num-1], mA, chiA_nrsur[num-1])
+        draw_black_hole(ax, BhB_traj[:,num-1], mB, chiB_nrsur[num-1])
+
         for idx in range(len(dataLines_binary)):
 
             line = lines[idx]
             data = dataLines_binary[idx]
 
-
-            if idx < 4:
-                if idx < 2:
-                    if draw_full_trajectory:
-                        start = 0
-                    else:
-                        start = max(0, num-hist_frames)
+            if idx < 2:
+                if draw_full_trajectory:
+                    start = 0
                 else:
-                    start = max(0, num-1)
-
+                    start = max(0, num-hist_frames)
                 # NOTE: there is no .set_data() for 3 dim data...
                 line.set_data(data[0:2, start:num])
                 line.set_3d_properties(data[2, start:num])
             else:
-                if idx == 4:
+                if idx == 2:
                     line.set_BH_spin_arrow(BhA_traj[:,num-1], mA, \
                         chiA_nrsur[num-1])
-                elif idx == 5:
+                elif idx == 3:
                     line.set_BH_spin_arrow(BhB_traj[:,num-1], mB, \
                         chiB_nrsur[num-1])
-                elif idx == 6:
+                elif idx == 4:
                     line.set_angular_momentum_arrow(L.T[:,num-1])
 
     else:
         if abs(current_time) < 10:
             # Clear binary stuff
-            for idx in range(4):
+            for idx in range(2):
                 line = lines[idx]
                 line.set_data([], [])
                 line.set_3d_properties([])
-            for idx in range(4,7):
+            for idx in range(2,5):
                 line = lines[idx]
                 line.reset()
 
@@ -704,19 +751,15 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
             chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
+        # draw ellipsoid for BH
+        draw_black_hole(ax, BhC_traj[:,num-1], mf, chif)
+
         for idx in range(len(dataLines_remnant)):
             line = lines[len(dataLines_binary)+idx]
             data = dataLines_remnant[idx]
 
-            if idx == 0:
-                # NOTE: there is no .set_data() for 3 dim data...
-                line.set_data(data[0:2, num-1:num])
-                line.set_3d_properties(data[2, num-1:num])
-            else:
-                Bh_loc = BhC_traj[:,num-1]
-                chi_vec = chif
-                mass = mf
-                line.set_BH_spin_arrow(Bh_loc, mass, chi_vec)
+            Bh_loc = BhC_traj[:,num-1]
+            line.set_BH_spin_arrow(Bh_loc, mf, chif)
 
 
     if current_time < -500:
@@ -754,7 +797,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
         omega_start=omega_start, uniform_time_step_size=uniform_time_step_size)
 
-    max_range = np.nanmax(separation)
+    max_range = np.nanmax(separation)/2.
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
@@ -817,9 +860,6 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     else:
         camera_traj = None
 
-    markersize_BhA = get_marker_size(mA, chiA)
-    markersize_BhB = get_marker_size(mB, chiB)
-    markersize_BhC = get_marker_size(mf, chif)
 
     if LOW_DEF:
         time_fontsize = 5
@@ -858,7 +898,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
-    dataLines_binary = [BhA_traj, BhB_traj, BhA_traj, BhB_traj, 1, 1, 1]
+    dataLines_binary = [BhA_traj, BhB_traj, 1, 1, 1]
 
     # get wavefrom at viewpoint
     h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
@@ -868,7 +908,6 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     else:
         arrow_mutation_scale = 20
 
-    marker_alpha = 0.9
     traj_alpha = 0.8
     lines = [\
         # These two are for plotting component tracjectories
@@ -879,37 +918,22 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             color=colors_dict['BhB_traj'], lw=2, alpha=traj_alpha, \
             zorder=zorder_dict['traj'])[0], \
 
-        # These two are for plotting component BHs
-        ax.plot(BhA_traj[0,0:1]-1e10, BhA_traj[1,0:1], BhA_traj[2,0:1], \
-            marker='o', markersize=markersize_BhA, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha, \
-            zorder=zorder_dict['Bh'])[0], \
-        ax.plot(BhB_traj[0,0:1]-1e10, BhB_traj[1,0:1], BhB_traj[2,0:1], \
-            marker='o', markersize=markersize_BhB, markerfacecolor='k',
-            markeredgewidth=0, alpha=marker_alpha, \
-            zorder=zorder_dict['Bh'])[0], \
-
         # These two are for plotting component BH spins
-        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhA_spin'], \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, \
+            lw=3, arrowstyle="-|>", color=colors_dict['BhA_spin'], \
             zorder=zorder_dict['spin'])), \
-        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhB_spin'], \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, \
+            lw=3, arrowstyle="-|>", color=colors_dict['BhB_spin'], \
             zorder=zorder_dict['spin'])), \
 
         # This is for plotting angular momentum direction
-        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['L'], \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, \
+            lw=3, arrowstyle="-|>", color=colors_dict['L'], \
             zorder=zorder_dict['L'])), \
 
-        # This is for plotting remnant BH
-        ax.plot(BhC_traj[0,0:1]-1e10, BhC_traj[1,0:1], BhC_traj[2,0:1], \
-            marker='o', markersize=markersize_BhC, markerfacecolor='k', \
-            markeredgewidth=0, alpha=marker_alpha, \
-            zorder=zorder_dict['Bh'])[0], \
         # This is for plotting remnant spin
-        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, lw=3, \
-            arrowstyle="-|>", color=colors_dict['BhC_spin'], \
+        ax.add_artist(Arrow3D(None, mutation_scale=arrow_mutation_scale, \
+            lw=3, arrowstyle="-|>", color=colors_dict['BhC_spin'], \
             zorder=zorder_dict['spin'])), \
         ]
 
@@ -931,7 +955,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
         hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
-    dataLines_remnant = [BhC_traj, 1]
+    dataLines_remnant = [1]
 
 
     # Setting the axes properties
@@ -973,7 +997,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         x=0.74, y=0.99)
 
     # number of frames to include in orbit trace
-    hist_frames = int(3./4*(PTS_PER_ORBIT))
+    hist_frames = int(0.75*(PTS_PER_ORBIT))
 
     # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
