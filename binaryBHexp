@@ -134,7 +134,7 @@ zorder_dict = {
         'notice_text': 100,
         'traj': 100,
         'Bh': 150,
-        'spin': 200,
+        'spin': 90,
         'L': 150,
         'J': 90,
         }
