@@ -200,10 +200,10 @@ def quat_between_vecs(u, v):
     angle = np.arccos(np.dot(normalize(u), normalize(v)))
     return quat_fromaxisangle(axis, angle)
 
-
 #----------------------------------------------------------------------------
-def draw_black_hole(ax, center, mass, chi):
-    """ Draws an ellipsoid according Kerr-Schild horizon for a BH.
+def get_BH_shape(mass, chi):
+    """ Get an ellipsoid according Kerr-Schild horizon for a BH, with center
+    at origin, and spin along z-direction.
     """
 
     a_Kerr = mass*np.linalg.norm(chi)
@@ -217,6 +217,20 @@ def draw_black_hole(ax, center, mass, chi):
     y = equitorial_rad*np.sin(u)*np.sin(v)
     z = polar_rad*np.cos(v)
 
+    return [x, y, z]
+
+
+
+#----------------------------------------------------------------------------
+def draw_black_hole(ax, shape_Bh, center, chi):
+    """ Draws an ellipsoid according Kerr-Schild horizon for a BH.
+        Takes an ellipsoid at origin, rotates polar axis along spin direction,
+        and shifts center to BH center
+    """
+
+    x, y, z = shape_Bh
+    array_shape = x.shape
+
     # rotate ellipsoid such that poles are along spin direction
     if np.linalg.norm(chi) > 1e-6:   # can't do norms, but don't need rotation
 
@@ -229,9 +243,9 @@ def draw_black_hole(ax, center, mass, chi):
             inverse=0)
 
         # unflatten to get meshgrid again
-        x = coords[0].reshape(u.shape)
-        y = coords[1].reshape(u.shape)
-        z = coords[2].reshape(u.shape)
+        x = coords[0].reshape(array_shape)
+        y = coords[1].reshape(array_shape)
+        z = coords[2].reshape(array_shape)
 
     # shift center
     x += center[0]
@@ -639,6 +653,7 @@ def make_zero_if_small(x):
 def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         dataLines_remnant, properties_text, freeze_text, timestep_text, \
         time_text, max_range, BhA_traj, BhB_traj, BhC_traj, L, h_nrsur, \
+        shape_BhA, shape_BhB, shape_BhC, \
         sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
@@ -708,8 +723,9 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
         # draw ellipsoids for BHs
-        draw_black_hole(ax, BhA_traj[:,num-1], mA, chiA_nrsur[num-1])
-        draw_black_hole(ax, BhB_traj[:,num-1], mB, chiB_nrsur[num-1])
+        draw_black_hole(ax, shape_BhA, BhA_traj[:,num-1], chiA_nrsur[num-1])
+        draw_black_hole(ax, shape_BhB, BhB_traj[:,num-1], chiB_nrsur[num-1])
+
 
         for idx in range(len(dataLines_binary)):
 
@@ -752,7 +768,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         # draw ellipsoid for BH
-        draw_black_hole(ax, BhC_traj[:,num-1], mf, chif)
+        draw_black_hole(ax, shape_BhC, BhC_traj[:,num-1], chif)
 
         for idx in range(len(dataLines_remnant)):
             line = lines[len(dataLines_binary)+idx]
@@ -814,6 +830,11 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     # coorbital frame at t=-100M
     mf, chif, vf, mf_err, chif_err, vf_err \
         = fit.all(q, chiA, chiB, omega0=omega_ref)
+
+    # Get Bh shapes assuming fixed spin magnitudes
+    shape_BhA = get_BH_shape(mA, chiA)
+    shape_BhB = get_BH_shape(mB, chiB)
+    shape_BhC = get_BH_shape(mf, chif)
 
     #print(np.linalg.norm(chif))
     #print(np.linalg.norm(vf))
@@ -1029,6 +1050,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     fargs = (lines, hist_frames, t, t_binary, dataLines_binary, \
             dataLines_remnant, properties_text, freeze_text, timestep_text, \
             time_text, max_range, BhA_traj, BhB_traj, BhC_traj, L, h_nrsur, \
+            shape_BhA, shape_BhB, shape_BhC, \
             sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
