@@ -119,6 +119,9 @@ else:
 # Make very low def video. This is needed for pypi.
 LOW_DEF = False
 
+# Do some hacks for hangup movies
+HANGUP_HACKS = False
+
 # number of frames per orbit
 PTS_PER_ORBIT = 30
 if LOW_DEF:
@@ -815,6 +818,9 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
     max_range = np.nanmax(np.linalg.norm(BhB_traj, axis=0))
 
+    if HANGUP_HACKS:
+        max_range = 6.5     # so that we can compare all hangup movies
+
     mA = q/(1.+q)
     mB = 1./(1.+q)
 
@@ -1038,10 +1044,11 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     #NOTE: There is a glitch if I don't skip the first index
     frames = range(1, len(t))
 
-    ## Use this if you want to speed up the movie when using a low
-    ## uniform_time_step_size
-    #frames = np.sort(np.append(range(1, len(t))[::5], np.argmin(np.abs(t))))
-    #hist_frames = 100
+    if HANGUP_HACKS:
+        ## Use this if you want to speed up the movie when using a low
+        ## uniform_time_step_size
+        frames = np.sort(np.append(range(1,len(t))[::5],np.argmin(np.abs(t))))
+        hist_frames = 100
 
     if not no_freeze_near_merger:
         # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
