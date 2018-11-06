@@ -17,7 +17,7 @@
             <header id="header" class="alt">
                 <div class="inner">
                     <h1>Binary black hole explorer</h1>
-                    <h3 style="text-transform: none;">Visualization of precessing binary black hole evolutions</h3>
+                    <h3 style="text-transform: none;">Visualization of precessing binary black holes</h3>
                 </div>
             </header>
 
@@ -30,26 +30,28 @@
 
                         <p> When two black holes (BHs) interact, they lose
     energy through gravitational waves and spiral towards each other. They
-    eventually merge to give rise to a single black hole. The final black hole
-    is characterized only by its mass, spin, and velocity (also called recoil
-    kick or simply, kick).
+    eventually merge to give rise to a single black hole that is characterized
+    only by its mass, spin, and velocity (also called recoil kick or simply,
+    kick).
                         </p>
 
-                        <p> The merger of binary black holes (BBHs) is a very
+                        <p> The merger of binary BHs is a very
     complicated process that requires numerical simulations to accurately
     predict the outcome. These simulations are very expensive, taking about a
-    month on a super computer to run. In recent years, several "surrogate"
-    models for these simulations have been developed.  These models are trained
-    against a large number of numerical simulations, using some fancy
-    interpolation methods. In the end, the surrogate can reproduce the result
-    of the simulation as accurately as the simulation itself, but in a fraction
-    of a second, and on your laptop, rather than a month on a super computer!
+    month on a super computer to run. In recent years, several
+    <em>surrogate</em> models for these simulations have been developed.  These
+    models are trained against a large number of numerical simulations, using
+    some fancy interpolation methods. In the end, the surrogate can reproduce
+    the result of the simulation as accurately as the simulation itself, but in
+    a fraction of a second, and on your laptop, rather than a month on a super
+    computer!
                         </p>
 
                         <p> In this package, we use these surrogate models to
     visualize the evolution of binary black hole systems. You can now generate
     visualizations at any point in the parameter space, in a few seconds,
-    without needing to do a full numerical simulation! 
+    without needing to do a full numerical simulation! These visualizations are
+    described in detail in our (upcoming) paper arxiv.xxxx.xxxx.
                         </p>
 
                     </section>
@@ -61,7 +63,7 @@
                             <h2>Visualizations</h2>
                         </header>
 
-                        <p> Enough background, let's see some videos! </p>
+                        <p> Enough background, let's see some movies! </p>
 
 
 
@@ -76,12 +78,12 @@
                         </video>
 
                         <p> Here we see a precessing binary black hole merger.
-    The black holes are shown as circular markers, with arrows indicating their
+    The black holes are shown as oblate spheres, with arrows indicating their
     spins. The orbital angular momentum is indicated by the pink arrow at the
-    origin. The colors in the back-planes show the value of the plus
+    origin. The colors in the bottom-plane shows the value of the plus
     polarization of the GW as seen by an observer at that location; red means
     positive and blue means negative, notice the quadrupolar pattern of the
-    radiation. In the plot at the bottom, we show the plus and cross
+    radiation. In the subplot at the bottom, we show the plus and cross
     polarizations as seen from the camera viewing angle. Our time steps are
     chosen such that there are 30 frames per orbit during the
     inspiral-merger-ringdown; this ensures that the movie slows down near the
@@ -92,7 +94,7 @@
     momentum direction. Therefore, the spins, the angular momentum, and the
     orbital plane all precess during the inspiral. It is interesting to see how
     the remnant spin direction is very close to the direction of the orbital
-    angular momentum near merger. This figure corresponds to figure xx of
+    angular momentum near merger. This figure corresponds to Fig. 1 of
     arxiv.xxx.xxxx.
                         </p>
 
@@ -102,7 +104,7 @@
 
                         <!-- VERY IMPORTANT: DO NOT MODIFY THIS ID. This is
                         used in the links in the paper. -->
-                        <h4 id="prec_bbh_rotating_camera"> Precessing BBH with varying camera angle</h4>
+                        <h4 id="prec_bbh_rotating_camera"> Precessing binary BH with varying camera angle</h4>
 
                         <video width="450px" height="auto"  controls>
                             <source src="movies/precessing_auto_rotate.mp4" type="video/mp4"> Your browser does not support the video tag.
@@ -110,13 +112,12 @@
 
 
                         <p> Here we show the same animation, but with a varying
-    camera angle. We project the waveform only on the bottom plane. In the plot
-    at the bottom we see how the waveform changes based on the viewing angle;
-    this is because the different (spin-weighted spherical harmonic) modes
-    combine with different weights based on the observer viewing angle.  Notice
-    how the GW signal is strongest along the direction of orbital angular
-    momentum and weakest in perpendicular directions. This figure corresponds
-    to figure xx of arxiv.xxx.xxxx.
+    camera angle. In the plot at the bottom we see how the waveform changes
+    based on the viewing angle; this is because the different (spin-weighted
+    spherical harmonic) modes combine with different weights based on the
+    observer viewing angle.  Notice how the GW signal is strongest along the
+    direction of orbital angular momentum and weakest in perpendicular
+    directions. This figure corresponds to Fig. 4 of arxiv.xxx.xxxx.
                         </p>
 
 
@@ -154,12 +155,12 @@
     momentum. In the middle, the black holes are nonspinning. On the right,
     both spins are anti-aligned with the orbital angular momentum. All three
     cases start at the same orbital frequency, however, due to the orbital
-    hangup-up effect, the aligned-spin case takes a longer time to merge. As a
-    result it also loses more energy to gravitational waves, and the final mass 
-    is smaller. On the other hand, because the anti-aligned spins reduce the
-    total orbital angular momentum of the system, the final spin is
-    lesser in the right case. The nonspinning case is intermediate between
-    these two.
+    hangup-up effect, the aligned (anti-aligned) case takes a longer (shorter)
+    time to merge than the nonspinning case. As a result the aligned system
+    also loses more energy to gravitational waves, and the final mass is
+    smaller. On the other hand, because the anti-aligned spins reduce the total
+    orbital angular momentum of the system, the final spin is lesser in the
+    right case. The nonspinning case is intermediate between these two.
                         </p>
 
                         <p> In these cases, due to the symmetries present, the
@@ -167,7 +168,8 @@
     uniform time steps between movie frames. Even though the start frequency is
     the same, the length of the waveform is different in each case, and
     therefore the BHs merge at different times. The time shown within each
-    panel is the time to merger of that case.
+    panel is the time to merger of that case. This figure corresponds to Fig. 5
+    of arxiv.xxx.xxxx.
                         </p>
 
 
@@ -185,8 +187,11 @@
                         <p> In this case, notice how the spins line up in a
     single plane close to the merger. This is believed to be necessary to cause
     super-kicks, or very high remnant velocities. Notice how fast the final
-    black hole flies away compared to the above cases. This figure corresponds
-    to figure xx of arxiv.xxx.xxxx.
+    black hole flies away compared to the above cases; that is about c/100,
+    where c is the speed of light! This is larger than the escape velocity of
+    even the most massive galaxies in the Universe, and such a binary would get
+    kicked out of its host galaxy. This figure corresponds to Fig. 6 of
+    arxiv.xxx.xxxx.
                         </p>
 
 
@@ -200,15 +205,12 @@
 
                         <p> The kick velocity is very sensitive to the
     orientation of the component spins near merger. Here we show several cases
-    where the spins have a fixed magnitude and are restricted to the orbital
-    plane, but the angle between them is varied.  Notice the sinusoidal nature
-    of the final kick magnitude. This figure corresponds to figure xx of
-    arxiv.xxx.xxxx.
-                        </p>
-
-                        <p> More details about about these visualizations,
-    including how they are generated can be found in our (upcoming) paper
-    arxiv.xxxx.xxxx.
+    that have equal-mass BHs, with anti-parallel spins lying in the orbital
+    plane at t=−100M. Each evolution is initialized with a different orbital
+    phase or, equivalently, performing an overall rotation of the spins about
+    the z-axis. The remnant kick changes dramatically with the phase of the
+    spins at merger; notice the sinusoidal nature of the final kick magnitude.
+    This figure corresponds to Fig. 7 of arxiv.xxx.xxxx.
                         </p>
 
                     </section>
@@ -228,7 +230,39 @@
     your laptop! These instructions have been tested for MacOS and Linux.
                         </p>
 
-                        <h3>Installation</h3>
+                        <h3>Short version</h3>
+                        <p> Our package, <a target="_blank" href="https://pypi.org/project/binaryBHexp/">binaryBHexp</a>, takes one command to
+    install and one command to run.
+                        </p>
+
+                        <h4>Installation</h4>
+
+                        <p> This package is available on
+    <a target="_blank" href="https://pypi.org/project/binaryBHexp/">PyPI</a>,
+    and can be installed using pip. This adds a new shell command called
+    binaryBHexp.
+                        </p>
+
+
+<pre><code>pip install binaryBHexp
+</code></pre>
+
+                        <h4>Usage</h4>
+
+<pre><code>binaryBHexp --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
+</code></pre>
+
+                        <p> For more options, do:
+                        </p>
+
+<pre><code>binaryBHexp -h
+</code></pre>
+
+
+
+                        <h3>Long version</h3>
+
+                        <h4>Installation</h4>
 
                         <p> This package is available on <a target="_blank" href="https://pypi.org/project/binaryBHexp/">PyPI</a>, and can be installed using pip.
                         </p>
@@ -246,7 +280,7 @@ cd binaryBHexp
 
 
 
-                        <h3>Prerequisites</h3>
+                        <h4>Prerequisites</h4>
 
                         <p> This package relies on the surrogate models, <a target="_blank" href="https://pypi.org/project/NRSur7dq2"> NRSur7dq2 </a> and <a target="_blank" href="https://pypi.org/project/surfinBH"> surfinBH </a>. These are
     automatically installed with the pip installation. For the Github version,
@@ -257,7 +291,7 @@ cd binaryBHexp
 pip install surfinBH
 </code></pre>
 
-                        <h3>Usage</h3>
+                        <h4>Usage</h4>
 
                         <p> If you installed the binaryBHexp package with pip,
     it should have added a new shell command called binaryBHexp, which you can
@@ -276,7 +310,7 @@ pip install surfinBH
 </code></pre>
 
 
-                        <h3>Examples</h3>
+                        <h4>Examples</h4>
 
                         <p> You can generate this 
     <a href="#super_kick"> super-kick movie </a> with the following command:
