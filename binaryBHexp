@@ -162,7 +162,7 @@ class Arrow3D(FancyArrowPatch):
         zs = [z, z+w*scale_factor]
         self._verts3d = xs, ys, zs
 
-    def set_angular_momentum_arrow(self, L, scale_factor=15):
+    def set_angular_momentum_arrow(self, L, scale_factor=12):
         #Place the base at center.
         xs = [0, L[0]*scale_factor]
         ys = [0, L[1]*scale_factor]
