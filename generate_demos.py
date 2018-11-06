@@ -18,7 +18,7 @@ for still_time in [-3800, -3450, -3100]:
     os.system('%s --still_time %f'%(prec_rot_cmd, still_time))
 
 os.system(super_kick_cmd)
-for still_time in [-2600, -100, 15, 2280]:
+for still_time in [-2600, -100, 15, 1366]:
     os.system('%s --still_time %f'%(super_kick_cmd, still_time))
 
 os.system(aligned_cmd)
