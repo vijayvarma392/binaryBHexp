@@ -228,7 +228,7 @@ def draw_black_hole(ax, shape_Bh, center, chi):
         and shifts center to BH center
     """
 
-    x, y, z = shape_Bh
+    x, y, z = np.copy(shape_Bh)
     array_shape = x.shape
 
     # rotate ellipsoid such that poles are along spin direction
