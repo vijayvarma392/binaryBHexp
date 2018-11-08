@@ -11,14 +11,16 @@ aligned_cmd = "./binaryBHexp --q 2 --chiA 0 0 -0.6 --chiB 0 0 0.8 --omega_ref 1.
 
 os.system(prec_cmd)
 for still_time in [-3650, -2000, -1000, -100, -10, 0, 15, 45, 75, 2280]:
-    os.system('%s --still_time %f'%(prec_cmd, still_time))
+    os.system('%s --still_time %f --no_surrogate_label'%(prec_cmd, still_time))
 
 os.system(prec_rot_cmd)
 for still_time in [-3800, -3450, -3100]:
-    os.system('%s --still_time %f'%(prec_rot_cmd, still_time))
+    os.system('%s --still_time %f --no_surrogate_label'%(prec_rot_cmd, \
+        still_time))
 
 os.system(super_kick_cmd)
 for still_time in [-2600, -100, 15, 1366]:
-    os.system('%s --still_time %f'%(super_kick_cmd, still_time))
+    os.system('%s --still_time %f --no_surrogate_label'%(super_kick_cmd, \
+        still_time))
 
 os.system(aligned_cmd)

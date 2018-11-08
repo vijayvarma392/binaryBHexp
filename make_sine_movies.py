@@ -32,7 +32,7 @@ cmdline_format = "./binaryBHexp --q {:.2f} " \
 
 # for making stills
 still_times = [-2000, -100, 0, 1365]
-still_cmdline_app_fmt = " --no_time_label --still_time {:.2f}"
+still_cmdline_app_fmt = " --no_time_label --no_surrogate_label --still_time {:.2f}"
 
 # Generate individual movies
 for i, alpha in enumerate(alphas):
