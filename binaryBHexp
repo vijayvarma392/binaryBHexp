@@ -808,7 +808,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
         rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
         omega_start=None, uniform_time_step_size=None, \
-        stop_after_ringdown=False, no_time_label=False):
+        stop_after_ringdown=False, no_time_label=False, \
+        no_surrogate_label=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -1020,8 +1021,9 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.yaxis.labelpad = label_pad
     ax.zaxis.labelpad = label_pad -3
 
-    ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
-        x=0.74, y=0.99)
+    if not args.no_surrogate_label:
+        ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
+            x=0.74, y=0.99)
 
     # number of frames to include in orbit trace
     hist_frames = int(0.75*(PTS_PER_ORBIT))
@@ -1171,6 +1173,9 @@ if __name__ == '__main__':
     pp_special.add_argument('--no_time_label', default=False, \
         action='store_true', \
         help='Do not show the current time in the figtext.')
+    pp_special.add_argument('--no_surrogate_label', default=False, \
+        action='store_true', \
+        help='Do not show the surrogate names in the figtext.')
 
     args = parser.parse_args()
     if args.height_map or args.auto_rotate_camera:
@@ -1199,7 +1204,8 @@ if __name__ == '__main__':
         omega_start = args.omega_start,
         uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time,
-        no_time_label = args.no_time_label)
+        no_time_label = args.no_time_label,
+        no_surrogate_label = args.no_surrogate_label)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
