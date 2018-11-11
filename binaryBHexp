@@ -215,7 +215,8 @@ def get_BH_shape(mass, chi):
     polar_rad = rplus
 
     # ellipsoid at origin
-    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:15j]
+    u, v = np.meshgrid(np.linspace(0,2*np.pi,30), \
+        np.arccos(np.linspace(-1,1,15)))
     x = equitorial_rad*np.cos(u)*np.sin(v)
     y = equitorial_rad*np.sin(u)*np.sin(v)
     z = polar_rad*np.cos(v)
