@@ -39,9 +39,16 @@
             <div id="wrapper">
 
                 <!-- Banner -->
-                    <section id="intro" class="main">
-                        <h2>Introduction</h2>
+                <section id="main" class="main">
 
+                  <header>
+                  <p><video width="450px" height="auto" controls autoplay>
+                      <source src="movies/precessing.mp4" type="video/mp4"> Your browser does not support the video tag.
+                    </video></p>
+
+                  <h2>What did I just watch?</h2>
+                  </header>
+                  
                         <p> When two black holes (BHs) interact, they lose
     energy through gravitational waves and spiral towards each other. They
     eventually merge to give rise to a single black hole that is characterized
@@ -49,24 +56,48 @@
     kick).
                         </p>
 
+                        <h3 id="contents">List of visualizations</h3>
+                        <ul>
+                          <li><a href="#prec_bbh">Precessing binary black hole</a></li>
+                          <li><a href="#prec_bbh_rotating_camera">Precessing
+                              binary BH with varying camera angle</a></li>
+                          <li><a href="#aligned_bbh">Aligned-spin binary
+                              black hole</a></li>
+                          <li><a href="#hangup">Orbital hangup effect</a></li>
+                          <li><a href="#super_kick">Super-kick</a></li>
+                          <li><a href="#sine_kicks">Sinusoidal-kicks</a></li>
+                          <li><a href="#gen_your_own">Generating your own visualizations</a></li>
+                          <li><a href="#credits">Credits</a></li>
+                        </ul>
+
+                        <h3>Introduction</h3>
+                        
                         <p> The merger of binary BHs is a very
     complicated process that requires numerical simulations to accurately
     predict the outcome. These simulations are very expensive, taking about a
-    month on a super computer to run. In recent years, several
+    month on a supercomputer to run. In recent years, several
     <em>surrogate</em> models for these simulations have been developed.  These
     models are trained against a large number of numerical simulations, using
     some fancy interpolation methods. In the end, the surrogate can reproduce
     the result of the simulation as accurately as the simulation itself, but in
-    a fraction of a second, and on your laptop, rather than a month on a super
-    computer!
+    a fraction of a second, and on your laptop, rather than a month on a supercomputer!
                         </p>
 
-                        <p> In this package, we use these surrogate models to
+                        <p> In our new package, <em>binaryBHexp</em>, we use these surrogate models to
     visualize the evolution of binary black hole systems. You can now generate
     visualizations at any point in the parameter space, in a few seconds,
     without needing to do a full numerical simulation! These visualizations are
-    described in detail in our (upcoming) paper arxiv.xxxx.xxxx.
+    described in detail in our (upcoming) paper [arXiv:xxxx.xxxxx].
                         </p>
+
+                  <p>
+                    On this page you'll find a number of example
+                    explorations that highlight what you can learn
+                    about black hole mergers
+                    with <em>binaryBHexp</em>.  For quick access, use
+                    the <a href="#contents">table of contents</a> above.
+                    Let's go!
+                  </p>
 
                     </section>
 
@@ -109,7 +140,7 @@
     orbital plane all precess during the inspiral. It is interesting to see how
     the remnant spin direction is very close to the direction of the orbital
     angular momentum near merger. This figure corresponds to Fig. 1 of
-    arxiv.xxx.xxxx.
+    [arXiv:xxxx.xxxxx].
                         </p>
 
 
@@ -131,7 +162,7 @@
     spherical harmonic) modes combine with different weights based on the
     observer viewing angle.  Notice how the GW signal is strongest along the
     direction of orbital angular momentum and weakest in perpendicular
-    directions. This figure corresponds to Fig. 4 of arxiv.xxx.xxxx.
+    directions. This figure corresponds to Fig. 4 of [arXiv:xxxx.xxxxx].
                         </p>
 
 
@@ -159,7 +190,7 @@
 
                         <!-- VERY IMPORTANT: DO NOT MODIFY THIS ID. This is
                         used in the links in the paper. -->
-                        <h3 id="hangup"> Orbital hangup effect</h3>
+                        <h3 id="hangup">Orbital hangup effect</h3>
                         <video width="100%" height="auto"  controls>
                             <source src="movies/hangup.mp4" type="video/mp4"> Your browser does not support the video tag.
                         </video>
@@ -183,7 +214,7 @@
     the same, the length of the waveform is different in each case, and
     therefore the BHs merge at different times. The time shown within each
     panel is the time to merger of that case. This figure corresponds to Fig. 5
-    of arxiv.xxx.xxxx.
+    of [arXiv:xxxx.xxxxx].
                         </p>
 
 
@@ -192,7 +223,7 @@
 
                         <!-- VERY IMPORTANT: DO NOT MODIFY THIS ID. This is
                         used in the links in the paper. -->
-                        <h3 id="super_kick"> Super-kick</h3>
+                        <h3 id="super_kick">Super-kick</h3>
 
                         <video width="450px" height="auto"  controls>
                             <source src="movies/super_kick.mp4" type="video/mp4"> Your browser does not support the video tag.
@@ -205,13 +236,13 @@
     where c is the speed of light! This is larger than the escape velocity of
     even the most massive galaxies in the Universe, and such a binary would get
     kicked out of its host galaxy. This figure corresponds to Fig. 6 of
-    arxiv.xxx.xxxx.
+    [arXiv:xxxx.xxxxx].
                         </p>
 
 
                         <!-- VERY IMPORTANT: DO NOT MODIFY THIS ID. This is
                         used in the links in the paper. -->
-                        <h3 id="sine_kicks"> Sinusoidal-kicks</h3>
+                        <h3 id="sine_kicks">Sinusoidal-kicks</h3>
 
                         <video width="100%" height="200px" controls>
                             <source src="movies/sine_kicks.mp4" type="video/mp4"> Your browser does not support the video tag.
@@ -224,7 +255,7 @@
     phase or, equivalently, performing an overall rotation of the spins about
     the z-axis. The remnant kick changes dramatically with the phase of the
     spins at merger; notice the sinusoidal nature of the final kick magnitude.
-    This figure corresponds to Fig. 7 of arxiv.xxx.xxxx.
+    This figure corresponds to Fig. 7 of [arXiv:xxxx.xxxxx].
                         </p>
 
                     </section>
@@ -236,7 +267,7 @@
                 <!-- Usage -->
                     <section id="main" class="main">
                         <header>
-                            <h2>Generating your own visualizations</h2>
+                            <h2 id="gen_your_own">Generating your own visualizations</h2>
                         </header>
 
                         <p> Since this package does not rely directly on
@@ -365,15 +396,15 @@ pip install surfinBH
                 <!-- Credits -->
                     <section id="main" class="main">
                         <header>
-                            <h2>Credits</h2>
+                            <h2 id="credits">Credits</h2>
                         </header>
 
-                        <p> This package was developed mainly by me, <a target="_blank" href="http://www.tapir.caltech.edu/~vvarma/"> Vijay Varma </a>,
-                        with useful contributions from <a target="_blank" href="https://duetosymmetry.com/"> Leo Stein </a> and <a target="_blank" href="https://davidegerosa.com/"> Davide Gerosa </a>.
+                        <p> This package was developed mainly by me, <a target="_blank" href="http://www.tapir.caltech.edu/~vvarma/">Vijay Varma</a>,
+                        with useful contributions from <a target="_blank" href="https://duetosymmetry.com/">Leo Stein</a> and <a target="_blank" href="https://davidegerosa.com/">Davide Gerosa</a>.
                         </p>
 
                         <p> Please credit me and cite our (upcoming) paper
-    (arxiv.xxxx.xxxx) if you use these visualizations in your work,
+    [arXiv:xxxx.xxxxx] if you use these visualizations in your work,
     presentations or outreach. Please report bugs on our
     <a target="_blank" href="https://github.com/vijayvarma392/binaryBHexp">Github repository</a>.
                         </p>
@@ -384,7 +415,7 @@ pip install surfinBH
 
                 <!-- Footer -->
                     <footer id="footer">
-                        <p class="copyright">&copy; VijayVarma2018. Design: <a href="https://templated.co">TEMPLATED</a>. Background <a target="_blank" href="https://www.ligo.caltech.edu/image/ligo20170601a">artwork</a> credit: LIGO/Caltech/MIT/Sonoma State (Aurore Simonnet)</p>
+                        <p class="copyright">&copy; Vijay Varma 2018. Design: <a href="https://templated.co">TEMPLATED</a>. Background <a target="_blank" href="https://www.ligo.caltech.edu/image/ligo20170601a">artwork</a> credit: LIGO/Caltech/MIT/Sonoma State (Aurore Simonnet)</p>
 
                     </footer>
 
