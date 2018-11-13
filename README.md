@@ -8,7 +8,7 @@ The binary Black Hole explorer.
 
 <img src="https://raw.githubusercontent.com/vijayvarma392/binaryBHexp/master/animations/example.png" alt="snapshot" width="400px"/>
 
-Generates visualizations of a precessing binary black hole merger and the
-final remnant black hole.
+Generates visualizations of precessing binary black hole mergers and the final
+remnant black holes.
 
 See our [webpage](https://vijayvarma392.github.io/binaryBHexp/) for more details.
