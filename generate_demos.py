@@ -19,7 +19,7 @@ for still_time in [-3800, -3450, -3100]:
         still_time))
 
 os.system(super_kick_cmd)
-for still_time in [-2600, -100, 15, 1366]:
+for still_time in [-2600, -100, 8.35, 1366]:
     os.system('%s --still_time %f --no_surrogate_label'%(super_kick_cmd, \
         still_time))
 
