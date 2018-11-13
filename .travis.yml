@@ -5,8 +5,8 @@ python:
 cache: pip
 install:
   - pip install .
-  - sudo add-apt-repository -y ppa:mc3man/trusty-media
-  - sudo apt-get -qq update
-  - sudo apt-get install -y ffmpeg
+  - travis_wait sudo add-apt-repository -y ppa:mc3man/trusty-media
+  - travis_wait sudo apt-get -qq update
+  - travis_wait sudo apt-get install -y ffmpeg
 script:
   - python binaryBHexp.py --q 1.5 --chiA 0.6 0.4 0.1 --chiB 0.3 0.4 0.2 --omega_ref 1.8e-2 --wave_time_series --auto_rotate_camera --save_file test.mp4
