@@ -14,3 +14,7 @@ dist
 *.egg-info  
 
 make_sine_movies_script.sh
+
+# travis stuff
+.pytest_cache
+test.mp4
