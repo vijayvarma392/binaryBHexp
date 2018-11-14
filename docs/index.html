@@ -52,8 +52,7 @@
                         <p> When two black holes (BHs) interact, they lose
     energy through gravitational waves and spiral towards each other. They
     eventually merge to give rise to a single black hole that is characterized
-    only by its mass, spin, and velocity (also called recoil kick or simply,
-    kick).
+    only by its mass, spin, and velocity (or "kick").
                         </p>
 
                         <h3 id="contents">List of visualizations</h3>
@@ -213,9 +212,8 @@
     final kick is zero.  Unlike the other animations in this page, here we use
     uniform time steps between movie frames. Even though the start frequency is
     the same, the length of the waveform is different in each case, and
-    therefore the BHs merge at different times. The time shown within each
-    panel is the time to merger of that case. This figure corresponds to Fig. 5
-    of [arXiv:xxxx.xxxxx].
+    therefore the BHs merge at different times. This figure corresponds to Fig.
+    5 of [arXiv:xxxx.xxxxx].
                         </p>
 
 
@@ -396,8 +394,9 @@ pip install surfinBH
 </code></pre>
 
                         <p> You can save the video to file with the --save_file 
-    option. You can generate this 
-    <a href="#aligned_bbh"> aligned-spin movie </a> with the following command:
+    option. Use this option if the live rendering is slow. You can generate
+    this <a href="#aligned_bbh"> aligned-spin movie </a> with the following
+    command:
                         </p>
 
 <pre><code>binaryBHexp --q 2 --chiA 0 0 -0.6 --chiB 0 0 0.8 --omega_ref 1.8e-2 --wave_time_series --save_file aligned.mp4
