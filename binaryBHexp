@@ -796,12 +796,18 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
         for idx in range(3):
             line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
+
+            time_offset = 0
+            # set t=0 at start for HANGUP_HACKS
+            if HANGUP_HACKS:
+                time_offset = t_binary[0]
+
             if idx == 0:
-                line.set_data(t_binary, np.real(h_viewpoint))
+                line.set_data(t_binary - time_offset, np.real(h_viewpoint))
             elif idx == 1:
-                line.set_data(t_binary, np.imag(h_viewpoint))
+                line.set_data(t_binary - time_offset, np.imag(h_viewpoint))
             else:
-                line.set_xdata(current_time)
+                line.set_xdata(current_time - time_offset)
 
 
     return lines
@@ -814,8 +820,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         auto_rotate_camera=False, save_file=None, still_time=None,  \
         rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
         omega_start=None, uniform_time_step_size=None, \
-        stop_after_ringdown=False, no_time_label=False, \
-        no_surrogate_label=False):
+        no_time_label=False, no_surrogate_label=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -853,18 +858,23 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     #print(np.linalg.norm(vf))
     #print(np.linalg.norm(vf) * 3 * 10**5)
 
-    if not stop_after_ringdown:
-        # Will stop plotting waveform after this time
-        # long enough for waveform pattern to disappear, taking into account
-        # propagation delay
-        waveform_end_time = 50 + 2*max_range
+    # Will stop plotting waveform after this time
+    # long enough for waveform pattern to disappear, taking into account
+    # propagation delay
+    waveform_end_time = 50 + 2*max_range
 
-        # common time array: After waveform_end_time, each step is 100M
-        t = np.append(t_binary[t_binary<waveform_end_time], \
-            np.arange(waveform_end_time, 10000+waveform_end_time, 100))
+    if uniform_time_step_size is None:
+        # Use large step size after ringdown to exaggerate kicks
+        dt_remnant = 100
     else:
-        waveform_end_time = 100
-        t = t_binary[t_binary<waveform_end_time]
+        dt_remnant = uniform_time_step_size
+
+    # common time array: After waveform_end_time, each step is 100M
+    t = np.append(t_binary[t_binary<waveform_end_time], \
+        np.arange(waveform_end_time, 10000+waveform_end_time, dt_remnant))
+
+    if HANGUP_HACKS:
+        t = t[t - t[0] <= 4100]
 
     # assume merger is at origin
     BhC_traj = np.array([tmp*t for tmp in vf])
@@ -888,6 +898,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         # estimate maximum of waveform for scale of timeseries
         hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
         hax.set_ylim([ -hmax_est, hmax_est ])
+        if HANGUP_HACKS:
+            hax.set_xlim(0, 4100)
 
     if auto_rotate_camera:
         camera_traj = get_camera_trajectory(t_binary)
@@ -1157,11 +1169,6 @@ if __name__ == '__main__':
         action='store_true', \
         help='Normally the movie is frozen close to merger for a few ' \
         'seconds. This option disables this feature.')
-    pp_special.add_argument('--stop_after_ringdown', default=False, \
-        action='store_true', \
-        help='Normally the movie is sped-up after the ringdown to ' \
-        'exaggerate the kicks. This option stops the movie at the end of ' \
-        'ringdown.')
     pp_special.add_argument('--omega_start', type=float, default=None,
         help='Starting orbital frequency, in units of rad/M. ' \
             'Currently, >= 0.018. This is different from omega_ref, and ' \
@@ -1206,7 +1213,6 @@ if __name__ == '__main__':
         auto_rotate_camera = args.auto_rotate_camera,
         save_file = args.save_file,
         no_freeze_near_merger = args.no_freeze_near_merger,
-        stop_after_ringdown = args.stop_after_ringdown,
         omega_start = args.omega_start,
         uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time,

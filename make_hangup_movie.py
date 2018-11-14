@@ -11,10 +11,8 @@ chi_mag = 0.8
 
 cmdline_format = "./binaryBHexp --q {:.2f} " \
     "--chiA 0 0 {:.2f} --chiB 0 0 {:.2f} --omega_start 1.8e-2 " \
-    "--wave_time_series --no_freeze_near_merger --stop_after_ringdown " \
-    "--uniform_time_step_size 1 --save_file animations/{}.mp4" \
-    "--no_time_label "
-    #"--no_time_label --no_surrogate_label "
+    "--wave_time_series --no_freeze_near_merger --uniform_time_step_size 1 " \
+    "--save_file animations/{}.mp4 --no_time_label --no_surrogate_label "
 
 # Generate individual movies
 cmdline = cmdline_format.format(q, chi_mag, chi_mag, "hangup_aligned")
@@ -34,7 +32,6 @@ join_cmdline = "ffmpeg -i animations/hangup_aligned.mp4 " \
     + "animations/hangup.mp4"
 os.system(join_cmdline)
 
-# save stills
 still_times = [3, 31.3, 42, 52.25]
 for time in still_times:
     os.system("ffmpeg -i animations/hangup.mp4 -ss 00:00:%.3f -vframes 1 animations/hangup_t%d.jpg"%(time, time))
