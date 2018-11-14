@@ -1174,7 +1174,8 @@ if __name__ == '__main__':
         action='store_true', \
         help='Normally we show an interactive waveform time series at the' \
         ' bottom which changes based on viewing angle. This disables ' \
-        'this feature.')
+        'this feature. However, this will let you pause the movie by ' \
+        'clicking on it.')
     pp_special.add_argument('--uniform_time_step_size', type=float, \
         default=None, \
         help='Normally the movie time steps are uniform in orbital phase. ' \
