@@ -10,9 +10,8 @@ final remnant black hole.
 Example usage:
 ./binaryBHexp --q 2 --chiA 0.2 0.7 -0.1 --chiB 0.2 0.6 0.1
 
-Note: Time values displayed in the plot are non-uniform and non-linear:
-During the inspiral-merger-ringdown there are 30 frames per orbit.
-After the ringdown each frame corresponds to a time step of 100M.
+By clicking and dragging on the movie as it plays, you change the viewing
+angle and see how the waveform changes.
 """
 __copyright__ = "Copyright (C) 2018 Vijay Varma"
 __email__ = "vvarma@caltech.edu"
@@ -667,7 +666,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        wave_time_series, no_freeze_near_merger, no_time_label):
+        no_wave_time_series, no_freeze_near_merger, no_time_label):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -792,7 +791,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             ax.view_init(elev=camera_traj[0][num], azim=camera_traj[1][num])
 
     # Plot waveform time series
-    if wave_time_series:
+    if not no_wave_time_series:
         h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
         for idx in range(3):
             line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
@@ -816,10 +815,10 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 #----------------------------------------------------------------------------
 def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         draw_full_trajectory=False, project_on_all_planes=False, \
-        height_map=False, wave_time_series=False, \
-        auto_rotate_camera=False, save_file=None, still_time=None,  \
-        rescale_fig_for_widgets=False, no_freeze_near_merger=False, \
-        omega_start=None, uniform_time_step_size=None, \
+        height_map=False, auto_rotate_camera=False, save_file=None, \
+        still_time=None,  rescale_fig_for_widgets=False, \
+        no_freeze_near_merger=False, omega_start=None, \
+        no_wave_time_series=False, uniform_time_step_size=None, \
         no_time_label=False, no_surrogate_label=False):
 
     chiA = np.array(chiA)
@@ -882,7 +881,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     # Attaching 3D axis to the figure
     ax = axes3d.Axes3D(fig)
 
-    if wave_time_series:
+    if not no_wave_time_series:
         l, b, w, h = ax.get_position().bounds
         if rescale_fig_for_widgets:
             ax.set_position([l, b + 0.25*h, w*0.7, 0.75*h ])
@@ -983,7 +982,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             zorder=zorder_dict['spin'])), \
         ]
 
-    if wave_time_series:
+    if not no_wave_time_series:
         lines += [ \
             # These two is for plotting the waveform time series
             hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$', \
@@ -1082,8 +1081,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
-            project_on_all_planes, wave_time_series, no_freeze_near_merger, \
-            no_time_label)
+            project_on_all_planes, no_wave_time_series, \
+            no_freeze_near_merger, no_time_label)
 
     # save still and exit
     if still_time is not None:
@@ -1115,7 +1114,7 @@ if __name__ == '__main__':
     pp_standard = parser.add_argument_group("Standard options")
 
     pp_standard.add_argument('--q', type=float, required=True,
-        help='Mass ratio.')
+        help='Mass ratio. Currently 1 <= q <= 2.')
     pp_standard.add_argument('--chiA', type=float, required=True, nargs=3,
         help='Dimensionless spin of BhA at omega_ref. List of size 3.')
     pp_standard.add_argument('--chiB', type=float, required=True, nargs=3,
@@ -1139,15 +1138,10 @@ if __name__ == '__main__':
             'rendering is slow. Allowed extensions are mp4 and gif. mp4 has ' \
             'the best quality. We use lower quality for gif to reduce file ' \
             'size. Example: --save_file movie.mp4')
-    pp_standard.add_argument('--wave_time_series', default=False, \
-        action='store_true', \
-        help='Plots an interactive waveform time series at the bottom. The ' \
-        'waveform changes based on viewing angle. This disables ' \
-        'pause-on-click.')
     pp_standard.add_argument('--auto_rotate_camera', default=False, \
         action='store_true', \
-        help='Auto rotates camera viewing angle. This turns off ' \
-        'project_on_all_planes. Particularly nice with wave_time_series set.')
+        help='Auto rotates camera viewing angle. You can see the waveform ' \
+        'change.')
 
     pp_special = parser.add_argument_group( \
         "Non standard options (mainly for developers)")
@@ -1156,7 +1150,8 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, projects the waveform on all three back planes. ' \
         'By default only does the x-y plane at the bottom. This can ' \
-        'interfere with the BH shapes.')
+        'interfere with the BH shapes. This is disabled if ' \
+        'auto_rotate_camera is set.')
     pp_special.add_argument('--height_map', default=False, \
         action='store_true', \
         help='Map h to a height to visualize in the xy plane ' \
@@ -1175,6 +1170,11 @@ if __name__ == '__main__':
             'instead controls the length of the visualization and the ' \
             'waveform by starting the visualization at this orbital ' \
             'frequency.')
+    pp_special.add_argument('--no_wave_time_series', default=False, \
+        action='store_true', \
+        help='Normally we show an interactive waveform time series at the' \
+        ' bottom which changes based on viewing angle. This disables ' \
+        'this feature.')
     pp_special.add_argument('--uniform_time_step_size', type=float, \
         default=None, \
         help='Normally the movie time steps are uniform in orbital phase. ' \
@@ -1198,10 +1198,10 @@ if __name__ == '__main__':
     if LOW_DEF:
         fig = P.figure(figsize=(2.3,2))
     else:
-        if args.wave_time_series:
-            fig = P.figure(figsize=(5,5.5))
-        else:
+        if args.no_wave_time_series:
             fig = P.figure(figsize=(5,4))
+        else:
+            fig = P.figure(figsize=(5,5.5))
 
 
     line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
@@ -1209,11 +1209,11 @@ if __name__ == '__main__':
         draw_full_trajectory = args.draw_full_trajectory,
         height_map = args.height_map,
         project_on_all_planes = args.project_on_all_planes,
-        wave_time_series = args.wave_time_series,
         auto_rotate_camera = args.auto_rotate_camera,
         save_file = args.save_file,
         no_freeze_near_merger = args.no_freeze_near_merger,
         omega_start = args.omega_start,
+        no_wave_time_series = args.no_wave_time_series,
         uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time,
         no_time_label = args.no_time_label,
@@ -1258,6 +1258,6 @@ if __name__ == '__main__':
 
         # The waveform does not update when you rotate when paused, so
         # disable pausing if plotting waveform time series
-        if not args.wave_time_series:
+        if args.no_wave_time_series:
             fig.canvas.mpl_connect('button_press_event', onClick)
         P.show()
