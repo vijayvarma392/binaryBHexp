@@ -28,7 +28,7 @@ os.system('mkdir -p %s'%temp_dir)
 base_filename = "%s/sinus"%temp_dir
 cmdline_format = "./binaryBHexp --q {:.2f} " \
     "--chiA {:.2f} {:.2f} {:.2f} --chiB {:.2f} {:.2f} {:.2f} " \
-    "--save_file {}{}.mp4"
+    "--no_wave_time_series --save_file {}{}.mp4"
 
 # for making stills
 still_times = [-2000, -100, 0, 1365]
