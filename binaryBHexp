@@ -52,6 +52,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 import surfinBH
 import NRSur7dq2
+from NRSur7dq2 import harmonics
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
@@ -263,98 +264,6 @@ def draw_black_hole(ax, shape_Bh, center, chi):
     ax.plot_surface(x, y, z, color='k', linewidth=0, alpha=0.9, \
         zorder=zorder_dict['Bh'])
 
-
-#----------------------------------------------------------------------------
-def harmonics(ss, ll, mm, theta, phi):
-    """
-    # spin-weighted spherical harmonics
-
-    #----------------------------------------------------------
-    #
-    # This module computes spin-weighted spherical harmonics.
-    #
-    # Released under the MIT License.
-    # (C) Christian Reisswig 2009-2011
-    #
-    #----------------------------------------------------------
-    """
-
-    def fac(n):
-       result = 1
-
-       for i in range(2, n+1):
-          result *= i
-
-       return result
-
-    # coefficient function
-    def Cslm(s, l, m):
-        return np.sqrt( l*l * (4.0*l*l - 1.0) / ( (l*l - m*m) * (l*l - s*s) ) )
-
-
-
-
-    # recursion function
-    def s_lambda_lm(s, l, m, x):
-
-        Pm = pow(-0.5, m)
-
-        if (m !=  s): Pm = Pm * pow(1.0+x, (m-s)*1.0/2)
-        if (m != -s): Pm = Pm * pow(1.0-x, (m+s)*1.0/2)
-
-        Pm = Pm * np.sqrt(fac(2*m + 1) * 1.0/(4.0*np.pi * fac(m+s) * fac(m-s)))
-
-        if (l == m):
-            return Pm
-
-        Pm1 = (x + s*1.0/(m+1) ) * Cslm(s, m+1, m) * Pm
-
-        if (l == m+1):
-            return Pm1
-        else:
-            for n in range (m+2, l+1):
-                Pn = (x + s*m * 1.0 / ( n * (n-1.0) ) ) * Cslm(s, n, m) * Pm1 - Cslm(s, n, m) * 1.0 / Cslm(s, n-1, m) * Pm
-                Pm = Pm1
-                Pm1 = Pn
-            return Pn
-
-
-    def sYlm(ss, ll, mm, theta, phi):
-
-        Pm = 1.0
-
-        l = ll
-        m = mm
-        s = ss
-
-        if (l < 0):
-            return 0
-        if (abs(m) > l or l < abs(s)):
-            return 0
-
-        if (abs(mm) < abs(ss)):
-            s=mm
-            m=ss
-            if ((m+s) % 2):
-                Pm  = -Pm
-
-
-        if (m < 0):
-            s=-s
-            m=-m
-            if ((m+s) % 2):
-                Pm  = -Pm
-
-        result = Pm * s_lambda_lm(s, l, m, np.cos(theta))
-
-        return complex(result * np.cos(mm*phi), result * np.sin(mm*phi))
-
-
-    return sYlm(ss, ll, mm, theta, phi)
-
-
-
-
 #----------------------------------------------------------------------------
 def spline_interp(newX, oldX, oldY, allowExtrapolation=False):
     """ Interpolates using splnes.
@@ -529,7 +438,7 @@ def get_waveform_on_grid(t_vals, t_idx, h_dict, sph_grid):
     t_ret_idx = np.vectorize(lambda r: np.argmin(np.abs(t_vals - t + r)))(r)
     for key in h_dict.keys():
         ell, m = key
-        ylm = np.vectorize(harmonics)(-2, ell, m, th, ph)
+        ylm = np.vectorize(harmonics.sYlm)(-2, ell, m, th, ph)
         h += h_dict[key][t_ret_idx]*ylm
     return np.real(h/r)
 
@@ -542,7 +451,7 @@ def get_waveform_timeseries(h_dict, azim, elev):
     h = np.zeros_like(h_dict[list(h_dict.keys())[0]], dtype=complex)
     for key in h_dict.keys():
         ell, m = key
-        ylm = harmonics(-2, ell, m, th, ph)
+        ylm = harmonics.sYlm(-2, ell, m, th, ph)
         h += h_dict[key]*ylm
     return h
 
