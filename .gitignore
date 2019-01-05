@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 *.ipynb_checkpoints
+.DS_store
 animations/*.mp4
 animations/*.pdf
 animations/*.png
