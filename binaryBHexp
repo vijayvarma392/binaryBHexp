@@ -44,6 +44,9 @@ if os.environ.get('DISPLAY','') == '':
    print('No display found. Using non-interactive Agg backend')
    import matplotlib as mpl
    mpl.use('Agg')
+else:
+    import matplotlib as mpl
+
 import matplotlib.pyplot as P
 import argparse
 
@@ -53,6 +56,8 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 import surfinBH
 import NRSur7dq2
 from NRSur7dq2 import harmonics
+
+import lal
 
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
@@ -575,12 +580,13 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        no_wave_time_series, no_freeze_near_merger, no_time_label):
+        no_wave_time_series, no_freeze_near_merger, no_time_label, \
+        strain_scale, t_scale):
     """ The function that goes into animation
     """
     current_time = t[num]
     if not no_time_label:
-        time_text.set_text('$t=%.1f\,M$'%current_time)
+        time_text.set_text('$t=%.2f$ (seconds)'%((current_time-t[0])*t_scale))
 
     if num == freeze_idx - 1:
         if not no_freeze_near_merger:
@@ -618,7 +624,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 offset=-max_range, cmap=cm.coolwarm, \
                 zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, norm=norm)
     else:
-        timestep_text.set_text('Increased time step to 100M')
+        timestep_text.set_text('Speeding up movie')
 
     if current_time < 0:        # Show binary until t=0
         if num < 2:
@@ -627,16 +633,16 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             line.reset()
             timestep_text.set_text('')
 
-        properties_text.set_text('$q=%.2f$\n' \
-            '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
-            '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
-            make_zero_if_small(chiA_nrsur[num-1][0]), \
-            make_zero_if_small(chiA_nrsur[num-1][1]), \
-            make_zero_if_small(chiA_nrsur[num-1][2]), \
-            make_zero_if_small(chiB_nrsur[num-1][0]), \
-            make_zero_if_small(chiB_nrsur[num-1][1]), \
-            make_zero_if_small(chiB_nrsur[num-1][2]), \
-            ))
+        #properties_text.set_text('$q=%.2f$\n' \
+        #    '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
+        #    '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
+        #    make_zero_if_small(chiA_nrsur[num-1][0]), \
+        #    make_zero_if_small(chiA_nrsur[num-1][1]), \
+        #    make_zero_if_small(chiA_nrsur[num-1][2]), \
+        #    make_zero_if_small(chiB_nrsur[num-1][0]), \
+        #    make_zero_if_small(chiB_nrsur[num-1][1]), \
+        #    make_zero_if_small(chiB_nrsur[num-1][2]), \
+        #    ))
 
 
         # draw ellipsoids for BHs
@@ -679,10 +685,10 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 line.reset()
 
 
-        properties_text.set_text('$m_f=%.2f\,M$\n' \
-            '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
-            '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
-            chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
+        #properties_text.set_text('$m_f=%.2f\,M$\n' \
+        #    '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
+        #    '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
+        #    chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         # draw ellipsoid for BH
         draw_black_hole(ax, shape_BhC, BhC_traj[:,num-1], chif)
@@ -702,21 +708,19 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     # Plot waveform time series
     if not no_wave_time_series:
         h_viewpoint = get_waveform_timeseries(h_nrsur, ax.azim, ax.elev)
-        for idx in range(3):
+        for idx in range(2):
             line = lines[len(dataLines_binary)+len(dataLines_remnant)+idx]
 
-            time_offset = 0
+            time_offset = t_binary[0]
             # set t=0 at start for HANGUP_HACKS
             if HANGUP_HACKS:
                 time_offset = t_binary[0]
 
             if idx == 0:
-                line.set_data(t_binary - time_offset, np.real(h_viewpoint))
-            elif idx == 1:
-                line.set_data(t_binary - time_offset, np.imag(h_viewpoint))
+                line.set_data(t_binary - time_offset, \
+                    np.real(h_viewpoint)*strain_scale)
             else:
                 line.set_xdata(current_time - time_offset)
-
 
     return lines
 
@@ -743,6 +747,17 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
     mA = q/(1.+q)
     mB = 1./(1.+q)
+
+
+    # solar masses
+    M_tot = 60
+    # conversion from M to kms
+    dist_scale = M_tot * lal.MTSUN_SI * lal.C_SI/1e3    
+    # conversion from M to sec
+    t_scale = M_tot * lal.MTSUN_SI   
+    # conversion from rh/M to h
+    dist_mpc = 400
+    strain_scale = M_tot*lal.MTSUN_SI*lal.C_SI/(1e6*dist_mpc*lal.PC_SI)
 
     # Get mesh grid on bottom plane to generate waveform
     sph_gridX, gridX, sph_gridY, gridY, sph_gridZ, gridZ \
@@ -804,8 +819,9 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
         # estimate maximum of waveform for scale of timeseries
-        hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))
+        hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))*strain_scale * 0.8
         hax.set_ylim([ -hmax_est, hmax_est ])
+        hax.set_xlim(0, 4700)
         if HANGUP_HACKS:
             hax.set_xlim(0, 4100)
 
@@ -832,13 +848,13 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         properties_text_yloc = 0.8
         freeze_fontsize = 14
         timestep_fontsize = 12
-        label_fontsize = 10
+        label_fontsize = 11
         ticks_fontsize = 10
         title_fontsize = 14
         ticks_pad = 0
-        label_pad = 0
+        label_pad = 3
 
-    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+    time_text = ax.text2D(0.05, 0.9, '', transform=ax.transAxes, \
         fontsize=time_fontsize, zorder=zorder_dict['info_text'])
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize, \
@@ -894,18 +910,15 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     if not no_wave_time_series:
         lines += [ \
             # These two is for plotting the waveform time series
-            hax.plot(t_binary, np.real(h_viewpoint), label='$h_+$', \
+            hax.plot(t_binary, np.real(h_viewpoint), \
                 color=colors_dict['h+'], lw=1.2)[0], \
-            hax.plot(t_binary, np.imag(h_viewpoint), label='$h_{\\times}$', \
-                color=colors_dict['hx'], lw=1.2)[0], \
-
             # This is for plotting the slider along the waveform time series
             hax.axvline(x=t_binary[0]), \
             ]
 
         hax.legend(loc='upper left', ncol=2)
-        hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
-        hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
+        hax.set_xlabel('$t$ (seconds)', fontsize=label_fontsize)
+        hax.set_ylabel('Strain', fontsize=label_fontsize+2)
         hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
         hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
@@ -919,9 +932,9 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.set_ylim3d([-max_range*0.96, max_range*0.96])
     ax.set_zlim3d([-max_range*0.96, max_range*0.96])
 
-    ax.set_xlabel('$x\,(M)$', fontsize=label_fontsize)
-    ax.set_ylabel('$y\,(M)$', fontsize=label_fontsize)
-    ax.set_zlabel('$z\,(M)$', fontsize=label_fontsize)
+    ax.set_xlabel('$x$ (km)', fontsize=label_fontsize)
+    ax.set_ylabel('$y$ (km)', fontsize=label_fontsize)
+    ax.set_zlabel('$z$ (km)', fontsize=label_fontsize)
 
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
@@ -940,12 +953,34 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         labelsize=ticks_fontsize)
     ax.tick_params(axis='y', which='major', pad=ticks_pad, \
         labelsize=ticks_fontsize)
-    ax.tick_params(axis='z', which='major', pad=ticks_pad, \
+    ax.tick_params(axis='z', which='major', pad=ticks_pad+2, \
         labelsize=ticks_fontsize)
 
     ax.xaxis.labelpad = label_pad
     ax.yaxis.labelpad = label_pad
-    ax.zaxis.labelpad = label_pad -3
+    ax.zaxis.labelpad = label_pad -2
+
+
+
+    # relabel 3d ticks to physical units
+    tickvals = np.array([-600, -300, 0, 300, 600])/dist_scale
+    ax.set_xticks(tickvals)
+    ax.set_yticks(tickvals)
+    ax.set_zticks(tickvals)
+    ticklabels = tickvals * dist_scale
+    ticklabels = ['%d'%tmp for tmp in ticklabels]
+    ax.set_xticklabels(ticklabels)
+    ax.set_yticklabels(ticklabels)
+    ax.set_zticklabels(ticklabels)
+
+    if not no_wave_time_series:
+        # relabel 2d ticks to physical units
+        tickvals = np.array([0, 0.25, 0.5, 0.75, 1, 1.25])/t_scale
+        hax.set_xticks(tickvals)
+        ticklabels = tickvals * t_scale
+        ticklabels = ['%.2f'%tmp for tmp in ticklabels]
+        hax.set_xticklabels(ticklabels)
+
 
     if not args.no_surrogate_label:
         ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
@@ -991,7 +1026,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
             project_on_all_planes, no_wave_time_series, \
-            no_freeze_near_merger, no_time_label)
+            no_freeze_near_merger, no_time_label, strain_scale, t_scale)
 
     # save still and exit
     if still_time is not None:
@@ -1148,7 +1183,7 @@ if __name__ == '__main__':
             'subject' : 'binaryBHexp: The binary Black Hole explorer',
             'copyright' : __copyright__,
             }
-        writer = Writer(fps=15, metadata=metadata)
+        writer = Writer(fps=15, metadata=metadata, extra_args=['-vcodec', 'libx264'])
         if LOW_DEF or extension == 'gif':
             line_ani.save(args.save_file, writer=writer)
         else:
