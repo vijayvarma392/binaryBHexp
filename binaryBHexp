@@ -624,7 +624,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 offset=-max_range, cmap=cm.coolwarm, \
                 zorder=zorder_dict['contourf'], vmin=vmin, vmax=vmax, norm=norm)
     else:
-        timestep_text.set_text('Speeding up movie')
+        timestep_text.set_text('Movie has been sped up \nto show the final "kick"')
 
     if current_time < 0:        # Show binary until t=0
         if num < 2:
@@ -813,7 +813,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             hax = fig.add_axes([0.135, 0.08, 0.5, 0.17])
             hax.clear()
         else:
-            ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+            ax.set_position([l, b + 0.25*h, w, 0.7*h ])
             # axes to plot waveform time series
             hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
 
@@ -850,7 +850,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         timestep_fontsize = 12
         label_fontsize = 11
         ticks_fontsize = 10
-        title_fontsize = 14
+        title_fontsize = 18
         ticks_pad = 0
         label_pad = 3
 
@@ -918,7 +918,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
         hax.legend(loc='upper left', ncol=2)
         hax.set_xlabel('$t$ (seconds)', fontsize=label_fontsize)
-        hax.set_ylabel('Strain', fontsize=label_fontsize+2)
+        hax.set_ylabel('Gravitational\n wave', fontsize=label_fontsize+2)
         hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
         hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
@@ -983,8 +983,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
     if not args.no_surrogate_label:
-        ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
-            x=0.74, y=0.99)
+        ax.set_title('Colliding, wobbling black holes', \
+            fontsize=title_fontsize, y=1.07)
 
     # number of frames to include in orbit trace
     hist_frames = int(0.75*(PTS_PER_ORBIT))
