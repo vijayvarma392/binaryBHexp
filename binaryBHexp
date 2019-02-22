@@ -159,12 +159,24 @@ class Arrow3D(FancyArrowPatch):
         zs = [0, vec[2]]
         self._verts3d = xs, ys, zs
 
-    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, scale_factor=10):
+    def set_BH_spin_arrow(self, Bh_loc, mass, chi_vec, \
+            use_Kerr=True):
         """
-        The length of the arrow is proportinal to Kerr parameter (a) of the BH.
+        By default, the length of the arrow is equal 10*a, where a is the
+        Kerr parameter of the BH.
+        Intead , if use_Kerr is False, it is equal to 12*S, where S is the
+        spin angular momentum of the BH, S = m * a.
         """
         x, y, z =  Bh_loc
-        u, v, w =  chi_vec*mass
+        if use_Kerr:
+            # Use a different scale factor than that of L, just to make
+            # it extra clear that you shouldn't compare the two arrows.
+            scale_factor = 10
+            u, v, w =  chi_vec*mass
+        else:
+            scale_factor = 12
+            u, v, w =  chi_vec*mass*mass
+
         xs = [x, x+u*scale_factor]
         ys = [y, y+v*scale_factor]
         zs = [z, z+w*scale_factor]
@@ -575,7 +587,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        no_wave_time_series, no_freeze_near_merger, no_time_label):
+        no_wave_time_series, no_freeze_near_merger, no_time_label, use_Kerr):
     """ The function that goes into animation
     """
     current_time = t[num]
@@ -660,10 +672,10 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             else:
                 if idx == 2:
                     line.set_BH_spin_arrow(BhA_traj[:,num-1], mA, \
-                        chiA_nrsur[num-1])
+                        chiA_nrsur[num-1], use_Kerr=use_Kerr)
                 elif idx == 3:
                     line.set_BH_spin_arrow(BhB_traj[:,num-1], mB, \
-                        chiB_nrsur[num-1])
+                        chiB_nrsur[num-1], use_Kerr=use_Kerr)
                 elif idx == 4:
                     line.set_angular_momentum_arrow(L.T[:,num-1])
 
@@ -692,7 +704,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             data = dataLines_remnant[idx]
 
             Bh_loc = BhC_traj[:,num-1]
-            line.set_BH_spin_arrow(Bh_loc, mf, chif)
+            line.set_BH_spin_arrow(Bh_loc, mf, chif, use_Kerr=use_Kerr)
 
 
     if current_time < -500:
@@ -728,7 +740,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         still_time=None,  rescale_fig_for_widgets=False, \
         no_freeze_near_merger=False, omega_start=None, \
         no_wave_time_series=False, uniform_time_step_size=None, \
-        no_time_label=False, no_surrogate_label=False):
+        no_time_label=False, no_surrogate_label=False, \
+        use_spin_angular_momentum_for_arrows=False):
 
     chiA = np.array(chiA)
     chiB = np.array(chiB)
@@ -982,6 +995,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         # Repeat freeze_idx 75 times, this is a hacky way to freeze the video
         frames = np.sort(np.append(frames, [freeze_idx]*75))
 
+    use_Kerr = not use_spin_angular_momentum_for_arrows
+
     fargs = (lines, hist_frames, t, t_binary, dataLines_binary, \
             dataLines_remnant, properties_text, freeze_text, timestep_text, \
             time_text, max_range, BhA_traj, BhB_traj, BhC_traj, L, h_nrsur, \
@@ -991,7 +1006,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
             project_on_all_planes, no_wave_time_series, \
-            no_freeze_near_merger, no_time_label)
+            no_freeze_near_merger, no_time_label, use_Kerr)
 
     # save still and exit
     if still_time is not None:
@@ -1069,6 +1084,11 @@ if __name__ == '__main__':
         action='store_true', \
         help='If given, draws the entire trajectories of the components. ' \
         'Else only retains the last 3/4th of an orbit.')
+    pp_special.add_argument('--use_spin_angular_momentum_for_arrows', \
+        default=False, action='store_true', \
+        help='By default the spin arrows are proportional to the Kerr ' \
+        'parameter a. If this is given, they are made proportional to the ' \
+        'spin angular momentum = m * a, instead.')
     pp_special.add_argument('--no_freeze_near_merger', default=False, \
         action='store_true', \
         help='Normally the movie is frozen close to merger for a few ' \
@@ -1127,7 +1147,9 @@ if __name__ == '__main__':
         uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time,
         no_time_label = args.no_time_label,
-        no_surrogate_label = args.no_surrogate_label)
+        no_surrogate_label = args.no_surrogate_label,
+        use_spin_angular_momentum_for_arrows \
+                = args.use_spin_angular_momentum_for_arrows)
 
     if args.save_file is not None:
         # Set up formatting for the movie files
