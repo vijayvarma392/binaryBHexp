@@ -363,8 +363,6 @@ def get_separation_from_omega(omega, mA, mB, chiA, chiB, LHat, pnorder=3.5):
     S_vec = mA**2.*chiA + mB**2.*chiB
 
     # some dot products
-    chiAL = np.sum(LHat*chiA, axis=1)
-    chiBL = np.sum(LHat*chiB, axis=1)
     chiAB = np.sum(chiA*chiB, axis=1)
     SigmaL = np.sum(Sigma_vec*LHat, axis=1)
     SL = np.sum(S_vec*LHat, axis=1)
@@ -469,7 +467,8 @@ def get_waveform_timeseries(h_dict, azim, elev):
 
 
 #----------------------------------------------------------------------------
-def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
+def get_auto_camera_trajectory(t_binary, period=1000, stop_time=-500, \
+        azim_shift=1):
     """ Get predetermined trajectory for camera.
         Varies the elevation between 0 and 90 degrees with given period.
         Varies the azimuthal angle by azim_shift degrees every time step.
@@ -490,6 +489,24 @@ def get_camera_trajectory(t_binary, period=1000, stop_time=-500, azim_shift=1):
 
     azim_vec = np.arange(len(t_binary))*azim_shift
     azim_vec -= azim_vec[stop_idx] +60
+
+    return [elev_vec, azim_vec]
+
+#----------------------------------------------------------------------------
+def get_coprecessing_camera_trajectory(t_binary, LHat, orbphase):
+    """ Get predetermined trajectory for camera.
+        Varies the elevation between 0 and 90 degrees with given period.
+        Varies the azimuthal angle by azim_shift degrees every time step.
+        Ensures that elevation = 30 and azimuthal angle = -60 at stop_time, the
+        defaults set by matplotlib. update_lines should stop moving the camera
+        at this time.
+    """
+
+    rad_to_deg = 180/np.pi
+
+
+    elev_vec = 90 - rad_to_deg*np.arccos(LHat.T[2]) # magnitude = 1 for LHat
+    azim_vec = rad_to_deg*np.arctan2(LHat.T[1], LHat.T[0])
 
     return [elev_vec, azim_vec]
 
@@ -567,7 +584,7 @@ def get_binary_data(q, chiA, chiB, omega_ref, omega_start=None, \
             h_nrsur[key] = h_nrsur[key][start_idx:]
 
     return t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
-        BhB_traj, separation
+        BhB_traj, separation, LHat, orbphase_nrsur
 
 
 
@@ -707,7 +724,9 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             line.set_BH_spin_arrow(Bh_loc, mf, chif, use_Kerr=use_Kerr)
 
 
-    if current_time < -500:
+    #FIXME FIXME
+    #if current_time < -500:
+    if current_time < 50:
         if camera_traj is not None:
             ax.view_init(elev=camera_traj[0][num], azim=camera_traj[1][num])
 
@@ -746,7 +765,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     chiA = np.array(chiA)
     chiB = np.array(chiB)
     t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
-        BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
+        BhB_traj, separation, LHat, orbphase_nrsur \
+        = get_binary_data(q, chiA, chiB, omega_ref, \
         omega_start=omega_start, uniform_time_step_size=uniform_time_step_size)
 
     max_range = np.nanmax(np.linalg.norm(BhB_traj, axis=0))
@@ -823,7 +843,10 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             hax.set_xlim(0, 4100)
 
     if auto_rotate_camera:
-        camera_traj = get_camera_trajectory(t_binary)
+        #FIXME
+        #camera_traj = get_auto_camera_trajectory(t_binary)
+        camera_traj = get_coprecessing_camera_trajectory(t_binary, LHat, \
+                orbphase_nrsur)
     else:
         camera_traj = None
 
