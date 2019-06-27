@@ -960,7 +960,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.yaxis.labelpad = label_pad
     ax.zaxis.labelpad = label_pad -3
 
-    if not args.no_surrogate_label:
+    if not no_surrogate_label:
         ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
             x=0.74, y=0.99)
 
