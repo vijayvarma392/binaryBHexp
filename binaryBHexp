@@ -684,8 +684,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             # Clear binary stuff
             for idx in range(2):
                 line = lines[idx]
-                line.set_data([], [])
-                line.set_3d_properties([])
+                line.set_data(np.array([]), np.array([]))
+                line.set_3d_properties(np.array([]))
             for idx in range(2,5):
                 line = lines[idx]
                 line.reset()
