@@ -963,7 +963,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
     # relabel 3d ticks to physical units
-    tickvals = np.array([-600, -300, 0, 300, 600])/dist_scale
+    tickvals = np.array([-800, -400, 0, 400, 800])/dist_scale
     ax.set_xticks(tickvals)
     ax.set_yticks(tickvals)
     ax.set_zticks(tickvals)
@@ -1146,7 +1146,7 @@ if __name__ == '__main__':
         if args.no_wave_time_series:
             fig = P.figure(figsize=(5,4))
         else:
-            fig = P.figure(figsize=(5,5.6))
+            fig = P.figure(figsize=(5.1,5.6))
 
 
     line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
