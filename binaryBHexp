@@ -819,7 +819,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
         # estimate maximum of waveform for scale of timeseries
-        hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))*strain_scale * 0.8
+        hmax_est = np.max(np.abs(get_waveform_timeseries(h_nrsur, 0, 90)))*strain_scale * 0.6
         hax.set_ylim([ -hmax_est, hmax_est ])
         hax.set_xlim(0, 4700)
         if HANGUP_HACKS:
@@ -1146,7 +1146,7 @@ if __name__ == '__main__':
         if args.no_wave_time_series:
             fig = P.figure(figsize=(5,4))
         else:
-            fig = P.figure(figsize=(5.1,5.2))
+            fig = P.figure(figsize=(5.1,5.4))
 
 
     line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
