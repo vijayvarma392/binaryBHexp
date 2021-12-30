@@ -1131,7 +1131,7 @@ if __name__ == '__main__':
         if args.no_wave_time_series:
             fig = P.figure(figsize=(5,4))
         else:
-            fig = P.figure(figsize=(5,5.5))
+            fig = P.figure(figsize=(5.1,5.4))
 
 
     line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
