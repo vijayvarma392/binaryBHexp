@@ -1,7 +1,7 @@
 [![github](https://img.shields.io/badge/GitHub-binaryBHexp-blue.svg)](https://github.com/vijayvarma392/binaryBHexp)
 [![PyPI version](https://badge.fury.io/py/binaryBHexp.svg)](https://pypi.org/project/binaryBHexp/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/vijayvarma392/binaryBHexp/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/vijayvarma392/binaryBHexp.svg?branch=master)](https://travis-ci.org/vijayvarma392/binaryBHexp)
+[![Build Status](https://github.com/vijayvarma392/binaryBHexp/actions/workflows/test.yml/badge.svg)](https://github.com/vijayvarma392/binaryBHexp/actions/workflows/test.yml)
 
 # binaryBHexp
 The binary Black Hole explorer.
