@@ -1,1 +1,2 @@
 ./binaryBHexp --q 2.147 --chiA -0.469 0.806 0.218 --chiB 0.013 -0.413 -0.550 --no_surrogate_label --no_freeze_near_merger --save_file GW200129.mp4
+./binaryBHexp --q 2.147 --chiA -0.469 0.806 0.218 --chiB 0.013 -0.413 -0.550 --no_surrogate_label --no_freeze_near_merger --no_wave_time_series --no_time_label  --still_time -800 --save_file GW200129.png
