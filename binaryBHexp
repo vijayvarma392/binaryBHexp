@@ -1015,7 +1015,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             time_tag = 'm%s'%time_tag
         update_lines(np.argmin(np.abs(t-still_time)), *fargs)
         still_fnametag = '%s_%s'%(save_file.split('.')[0], time_tag)
-        P.savefig('%s.png'%still_fnametag, bbox_inches='tight')
+        P.savefig('%s.png'%still_fnametag, bbox_inches='tight', dpi=300)
         P.savefig('%s.pdf'%still_fnametag, bbox_inches='tight')
         exit()
 
