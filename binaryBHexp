@@ -762,7 +762,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         = get_grids_on_planes(11, max_range)
 
     # evaluate remnant fit
-    fit_name = 'surfinBH7dq2'
+    fit_name = 'NRSur7dq4EmriRemnant'
     fit = surfinBH.LoadFits(fit_name)
 
     # If omega_ref is None, will assume the spins are given in the
