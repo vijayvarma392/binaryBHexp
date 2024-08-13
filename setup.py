@@ -32,6 +32,7 @@ setuptools.setup(
         'palettable',
         'surfinBH',
         'NRSur7dq2>=1.0.5',
+        'numpy<2',  # At the time of checking (Aug 13, 2024) lal needs numpy<2
     ],
     scripts=['binaryBHexp'],
     classifiers=[
