@@ -39,11 +39,6 @@ THE SOFTWARE.
 """
 
 import numpy as np
-import os
-if os.environ.get('DISPLAY','') == '':
-   print('No display found. Using non-interactive Agg backend')
-   import matplotlib as mpl
-   mpl.use('Agg')
 import matplotlib.pyplot as P
 import argparse
 
@@ -54,13 +49,11 @@ import surfinBH
 import NRSur7dq2
 from NRSur7dq2 import harmonics
 
-from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
 import matplotlib.animation as animation
 from matplotlib.patches import FancyArrowPatch
 from matplotlib import cm
 import matplotlib.colors as colors
-from matplotlib.colors import LogNorm
 
 if 'seaborn' in P.style.available:
     P.style.use("seaborn")
