@@ -598,7 +598,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
     current_time = t[num]
     if not no_time_label:
-        time_text.set_text('$t=%.1f\,M$'%current_time)
+        time_text.set_text(r'$t=%.1f\,M$'%current_time)
 
     if num == freeze_idx - 1:
         if not no_freeze_near_merger:
@@ -702,9 +702,9 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
 
-        properties_text.set_text('$m_f=%.2f\,M$\n' \
-            '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
-            '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
+        properties_text.set_text(r'$m_f=%.2f\,M$\n' \
+            r'$\chi_f=[%.2f, %.2f, %.2f]$\n' \
+            r'$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
             chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         # draw ellipsoid for BH
@@ -927,8 +927,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             ]
 
         hax.legend(loc='upper left', ncol=2)
-        hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
-        hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
+        hax.set_xlabel(r'$t\,(M)$', fontsize=label_fontsize)
+        hax.set_ylabel(r'$h\,r/M$', fontsize=label_fontsize)
         hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
         hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
@@ -955,9 +955,9 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.set_ylim3d([-max_range, max_range])
     ax.set_zlim3d([-max_range, max_range])
 
-    ax.set_xlabel('$x\,(M)$', fontsize=label_fontsize)
-    ax.set_ylabel('$y\,(M)$', fontsize=label_fontsize)
-    ax.set_zlabel('$z\,(M)$', fontsize=label_fontsize)
+    ax.set_xlabel(r'$x\,(M)$', fontsize=label_fontsize)
+    ax.set_ylabel(r'$y\,(M)$', fontsize=label_fontsize)
+    ax.set_zlabel(r'$z\,(M)$', fontsize=label_fontsize)
 
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
