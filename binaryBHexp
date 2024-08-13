@@ -644,8 +644,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             timestep_text.set_text('')
 
         properties_text.set_text('$q=%.2f$\n' \
-            '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
-            '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
+            '$\\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
+            '$\\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
             make_zero_if_small(chiA_nrsur[num-1][0]), \
             make_zero_if_small(chiA_nrsur[num-1][1]), \
             make_zero_if_small(chiA_nrsur[num-1][2]), \
