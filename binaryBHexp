@@ -43,7 +43,7 @@ import os
 if os.environ.get('DISPLAY','') == '':
    print('No display found. Using non-interactive Agg backend')
    import matplotlib as mpl
-   #mpl.use('Agg')
+   mpl.use('Agg')
 import matplotlib.pyplot as P
 import argparse
 
@@ -786,10 +786,6 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     shape_BhB = get_BH_shape(mB, chiB)
     shape_BhC = get_BH_shape(mf, chif)
 
-    #print(np.linalg.norm(chif))
-    #print(np.linalg.norm(vf))
-    #print(np.linalg.norm(vf) * 3 * 10**5)
-
     # Will stop plotting waveform after this time
     # long enough for waveform pattern to disappear, taking into account
     # propagation delay
@@ -812,7 +808,6 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     BhC_traj = np.array([tmp*t for tmp in vf])
 
     # Attaching 3D axis to the figure
-    #ax = axes3d.Axes3D(fig)
     ax = fig.add_subplot(projection='3d', computed_zorder=False)
 
     if not no_wave_time_series:
@@ -823,14 +818,10 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             hax = fig.add_axes([0.135, 0.08, 0.5, 0.17])
             hax.clear()
         else:
-            #ax.set_position([l, b + 0.25*h, w, 0.75*h ])
-            #ax.set_position([l-0.17*w, b + 0.2*h, w, h])
             ax.set_position([l, b + 0.2*h, w, h])
             # axes to plot waveform time series
-            #hax = fig.add_axes([0.12, 0.08, 0.8, 0.17])
             hax = fig.add_axes([0.12, 0.08, 0.82, 0.17])
             fig.subplots_adjust(left=-0.2, bottom=0.25, right=1.17, top=1)
-
 
 
         # estimate maximum of waveform for scale of timeseries
@@ -992,16 +983,11 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.yaxis.labelpad = label_pad
     ax.zaxis.labelpad = label_pad -3
 
-    # if add_surrogate_label:
-    #     ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
-    #         x=0.74, y=0.99)
-
     # number of frames to include in orbit trace
     hist_frames = int(0.75*(PTS_PER_ORBIT))
 
     # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
-
 
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
