@@ -1,4 +1,5 @@
-#!/home/rdb/anaconda3/envs/bbhexp/bin/python3.6
+#!/home/rdb/anaconda3/envs/bbhNew/bin/python3.12
+#New
 
 __doc__ = """binaryBHexp
 ========
@@ -17,7 +18,7 @@ __copyright__ = "Copyright (C) 2018 Vijay Varma"
 __email__ = "vvarma@caltech.edu"
 __status__ = "testing"
 __author__ = "Vijay Varma"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __license__ = """
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,11 +40,6 @@ THE SOFTWARE.
 """
 
 import numpy as np
-import os
-if os.environ.get('DISPLAY','') == '':
-   print('No display found. Using non-interactive Agg backend')
-   import matplotlib as mpl
-   mpl.use('Agg')
 import matplotlib.pyplot as P
 import argparse
 
@@ -54,17 +50,19 @@ import surfinBH
 import NRSur7dq2
 from NRSur7dq2 import harmonics
 
-from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import proj3d
 import matplotlib.animation as animation
 from matplotlib.patches import FancyArrowPatch
 from matplotlib import cm
 import matplotlib.colors as colors
-from matplotlib.colors import LogNorm
-P.style.use('seaborn')
 
-# import sxs
-# import h5py
+import sxs
+import h5py
+
+if 'seaborn' in P.style.available:
+    P.style.use("seaborn")
+else:
+    P.style.use("seaborn-v0_8")
 
 use_palettable = False
 try:
@@ -138,18 +136,16 @@ if LOW_DEF:
 # Time at which to freeze video for 5 seconds
 FREEZE_TIME = -100
 
-
 zorder_dict = {
-        'contourf': -200,
-        'info_text': 200,
-        'notice_text': 100,
-        'traj': 100,
-        'Bh': 150,
-        'spin': 90,
-        'L': 150,
-        'J': 90,
+        'contourf': -1,
+        'info_text': 3,
+        'notice_text': 1,
+        'traj': 4,
+        'Bh': 2,
+        'spin': 3,
+        'L': 2,
+        'J': 0,
         }
-
 
 class Arrow3D(FancyArrowPatch):
     def __init__(self, vecs, *args, **kwargs):
@@ -195,12 +191,13 @@ class Arrow3D(FancyArrowPatch):
     def reset(self):
         self._verts3d = None
 
-    def draw(self, renderer):
-        if self._verts3d is not None:
-            xs3d, ys3d, zs3d = self._verts3d
-            xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
-            self.set_positions((xs[0],ys[0]),(xs[1],ys[1]))
-            FancyArrowPatch.draw(self, renderer)
+    def do_3d_projection(self, renderer=None):
+        if self._verts3d is None:
+            return 0
+        xs3d, ys3d, zs3d = self._verts3d
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.M)
+        self.set_positions((xs[0],ys[0]),(xs[1],ys[1]))
+        return np.min(zs)
 
 
 #----------------------------------------------------------------------------
@@ -246,7 +243,7 @@ def get_BH_shape(mass, chi):
 
 
 #----------------------------------------------------------------------------
-def draw_black_hole(ax, shape_Bh, center, chi):
+def draw_black_hole(ax, BH_shapes_holder, BH_idx, shape_Bh, center, chi):
     """ Draws an ellipsoid according Kerr-Schild horizon for a BH.
         Takes an ellipsoid at origin, rotates polar axis along spin direction,
         and shifts center to BH center
@@ -276,8 +273,9 @@ def draw_black_hole(ax, shape_Bh, center, chi):
     y += center[1]
     z += center[2]
 
-    ax.plot_surface(x, y, z, color='k', linewidth=0, alpha=0.9, \
-        zorder=zorder_dict['Bh'])
+    BH_shapes_holder[BH_idx].remove()
+    BH_shapes_holder[BH_idx] = ax.plot_surface(x, y, z, color='k', linewidth=0, alpha=0.9,
+                                               zorder=zorder_dict['Bh'])
 
 #----------------------------------------------------------------------------
 def spline_interp(newX, oldX, oldY, allowExtrapolation=False):
@@ -535,7 +533,6 @@ def get_binary_data(q, chiA, chiB, omega_ref, omega_start=None, \
     # interpolate dynamics on to t_binary
     quat_nrsur = np.array([spline_interp(t_binary, nr_sur.tds, tmp) \
         for tmp in quat_nrsur])
-    print("quat ", quat_nrsur.shape)
     orbphase_nrsur = spline_interp(t_binary, nr_sur.tds, orbphase_nrsur)
 
     omega_nrsur = get_omegaOrb_from_sparse_data(t_binary, orbphase_nrsur)
@@ -547,7 +544,6 @@ def get_binary_data(q, chiA, chiB, omega_ref, omega_start=None, \
     LHat = surfinBH._utils.lHat_from_quat(quat_nrsur).T
     separation = get_separation_from_omega(omega_nrsur, mA, mB, chiA_nrsur, \
         chiB_nrsur, LHat)
-    print("LHat ", LHat.shape)
 
     # Newtonian
     LMag = q/(1.+q)**2 * omega_nrsur**(-1./3)
@@ -574,10 +570,11 @@ def get_binary_data(q, chiA, chiB, omega_ref, omega_start=None, \
     return t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
         BhB_traj, separation
 
+
 #----------------------------------------------------------------------------
 def get_binary_data_NR(datapath, uniform_time_step_size=None):
 
-    """
+    
     data = sxs.load(f'{datapath}/Strain_N2')
     t = data.t
 
@@ -620,7 +617,6 @@ def get_binary_data_NR(datapath, uniform_time_step_size=None):
     # Following Eq.3 of https://arxiv.org/abs/1905.09300
     orbphase = (np.unwrap(np.angle(data_copr.data.T[0])) - np.unwrap(np.angle(data_copr.data.T[4])))/4
     orbphase -= orbphase[0]
-    """
 
     # So far we have data on two different time grids:
     # t: the time grid of the waveform data
@@ -636,29 +632,6 @@ def get_binary_data_NR(datapath, uniform_time_step_size=None):
     # q: Mass ratio.
     # quat: Coprecessing frame quaternion on t.
     # orbphase: Orbital phase on t.
-
-    t = np.loadtxt(datapath + "t.csv", delimiter = ",")
-    t_hor = np.loadtxt(datapath + "t_hor.csv", delimiter = ",")
-    chiA = np.loadtxt(datapath + "chiA.csv", delimiter = ",")
-    chiB = np.loadtxt(datapath + "chiB.csv", delimiter = ",")
-    quat = np.loadtxt(datapath + "quat.csv", delimiter = ",")
-    orbphase = np.loadtxt(datapath + "orbphase.csv", delimiter = ",")
-    QmAmB = np.loadtxt(datapath + "QmAmB.csv", delimiter = ",")
-
-    q =QmAmB[0]
-    mA =QmAmB[1]
-    mB =QmAmB[2]
-
-    h_dict = {}
-    for first in range(2,5):
-        for second in range(-first, first+1):
-            h_dict[(first, second)] = np.loadtxt(datapath + "h_dict(" + str(first) + str(second) + ").csv", dtype = 'complex', delimiter = ",")
-
-    ##### Instructions for Ryan
-    # Step 1: Define a new time array t_binary that goes from t[0]+500 to t[-1]
-    # in steps of 0.1. The first 500 is dropped to get rid of what is called
-    # "junk radiation" during the initial stages where the simulation needs to
-    # settle.
 
     t_bin = np.arange(t[0]+500, t[-1], 0.1)
     orbphase = spline_interp(t_bin, t, orbphase)
@@ -679,29 +652,18 @@ def get_binary_data_NR(datapath, uniform_time_step_size=None):
     if np.min(np.abs(t_binary - 0)) > 0.1:
         t_binary = np.sort(np.append(t_binary, 0))
 
-    # Step 2: Interpolate h_dict, chiA, chiB, quat, and orbphase onto this
-    # common time array. Use this function for interpolation:
-    # https://github.com/vijayvarma392/binaryBHexp/blob/master/binaryBHexp#L280
-    # Here, keep in mind that t_hor ends when the two BHs merge, while t
-    # continues in the post-merger. So, to interpolate chiA and chiB onto
-    # t_binary, you should set allowExtrapolation=True in spline_interp.
-    # Also, there is a possibility that some of the indices for chiA/chiB have
-    # nan values, so check for that first
-    # (https://numpy.org/doc/stable/reference/generated/numpy.isnan.html) and
-    # let me know if that happens.
-
     # chiA and chiB are in the frame of t_hor
     # h_dict, quat, and orbphase are in the frame of t
 
     for i in h_dict.keys():
-        h_dict[i] = spline_interp(t_binary, t, h_dict[i])
+        h_dict[i] = spline_interp(t_binary, t, h_dict[i].real) + 1j * spline_interp(t_binary, t, h_dict[i].imag)
     
     orbphase = spline_interp(t_binary, t_bin, orbphase)
 
-    quat0 = spline_interp(t_binary, t, quat.T[0])
-    quat1 = spline_interp(t_binary, t, quat.T[1])
-    quat2 = spline_interp(t_binary, t, quat.T[2])
-    quat3 = spline_interp(t_binary, t, quat.T[3])
+    quat0 = spline_interp(t_binary, t, quat.ndarray.T[0])
+    quat1 = spline_interp(t_binary, t, quat.ndarray.T[1])
+    quat2 = spline_interp(t_binary, t, quat.ndarray.T[2])
+    quat3 = spline_interp(t_binary, t, quat.ndarray.T[3])
     quat = np.array([quat0, quat1, quat2, quat3])
 
     chiA0 = spline_interp(t_binary, t_hor, chiA.T[0], allowExtrapolation = True)
@@ -713,10 +675,6 @@ def get_binary_data_NR(datapath, uniform_time_step_size=None):
     chiB1 = spline_interp(t_binary, t_hor, chiB.T[1], allowExtrapolation = True)
     chiB2 = spline_interp(t_binary, t_hor, chiB.T[2], allowExtrapolation = True)
     chiB = np.array([chiB0, chiB1, chiB2]).T
-
-    # Step 3: Once you have the data on t_binary, follow the same steps as in
-    # get_binary_data() to compute L, BhA_traj, BhB_traj, and separation. Then
-    # return everything in the same format. 
 
     omega = get_omegaOrb_from_sparse_data(t_binary, orbphase)
 
@@ -756,12 +714,14 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
         q, mA, mB, chiA_nrsur, chiB_nrsur, mf, chif, vf, \
         waveform_end_time, freeze_idx, draw_full_trajectory, ax, vmin, vmax, \
         linthresh, camera_traj, height_map, project_on_all_planes, \
-        no_wave_time_series, no_freeze_near_merger, no_time_label, use_Kerr):
+        no_wave_time_series, no_freeze_near_merger, no_time_label, use_Kerr, \
+        BH_shapes_holder):
     """ The function that goes into animation
     """
+
     current_time = t[num]
     if not no_time_label:
-        time_text.set_text('$t=%.1f\,M$'%current_time)
+        time_text.set_text('$t=%.1f\\,M$'%current_time)
 
     if num == freeze_idx - 1:
         if not no_freeze_near_merger:
@@ -770,8 +730,6 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
     if num == freeze_idx + 1:
         # Clear text about freezing after freezing
         freeze_text.set_text('')
-
-    ax.collections = []     # It becomes very slow without this
 
     if current_time < waveform_end_time:
         # Plot the waveform on the back planes
@@ -809,8 +767,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             timestep_text.set_text('')
 
         properties_text.set_text('$q=%.2f$\n' \
-            '$\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
-            '$\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
+            '$\\chi_{A}=[%.2f, %.2f, %.2f]$\n' \
+            '$\\chi_{B}=[%.2f, %.2f, %.2f]$\n'%(q, \
             make_zero_if_small(chiA_nrsur[num-1][0]), \
             make_zero_if_small(chiA_nrsur[num-1][1]), \
             make_zero_if_small(chiA_nrsur[num-1][2]), \
@@ -821,8 +779,8 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
 
 
         # draw ellipsoids for BHs
-        draw_black_hole(ax, shape_BhA, BhA_traj[:,num-1], chiA_nrsur[num-1])
-        draw_black_hole(ax, shape_BhB, BhB_traj[:,num-1], chiB_nrsur[num-1])
+        draw_black_hole(ax, BH_shapes_holder, 0, shape_BhA, BhA_traj[:,num-1], chiA_nrsur[num-1])
+        draw_black_hole(ax, BH_shapes_holder, 1, shape_BhB, BhB_traj[:,num-1], chiB_nrsur[num-1])
 
 
         for idx in range(len(dataLines_binary)):
@@ -830,7 +788,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             line = lines[idx]
             data = dataLines_binary[idx]
 
-            if idx < 2:
+            if idx < 2:     # The component BH trajectories
                 if draw_full_trajectory:
                     start = 0
                 else:
@@ -839,13 +797,13 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 line.set_data(data[0:2, start:num])
                 line.set_3d_properties(data[2, start:num])
             else:
-                if idx == 2:
+                if idx == 2:    # BhA spin
                     line.set_BH_spin_arrow(BhA_traj[:,num-1], mA, \
                         chiA_nrsur[num-1], use_Kerr=use_Kerr)
-                elif idx == 3:
+                elif idx == 3:  # BhB spin
                     line.set_BH_spin_arrow(BhB_traj[:,num-1], mB, \
                         chiB_nrsur[num-1], use_Kerr=use_Kerr)
-                elif idx == 4:
+                elif idx == 4:  # Angular momentum
                     line.set_angular_momentum_arrow(L.T[:,num-1])
 
     else:
@@ -856,17 +814,24 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
                 line.set_data(np.array([]), np.array([]))
                 line.set_3d_properties(np.array([]))
             for idx in range(2,5):
-                line = lines[idx]
-                line.reset()
+                if lines[idx] is not None:
+                    lines[idx].remove()
+                    lines[idx] = None
+            if BH_shapes_holder[0] is not None:
+                BH_shapes_holder[0].remove()
+                BH_shapes_holder[1].remove()
+                BH_shapes_holder[0] = None
+                BH_shapes_holder[1] = None
 
 
-        properties_text.set_text('$m_f=%.2f\,M$\n' \
-            '$\chi_f=[%.2f, %.2f, %.2f]$\n' \
+
+        properties_text.set_text('$m_f=%.2f\\,M$\n' \
+            '$\\chi_f=[%.2f, %.2f, %.2f]$\n' \
             '$v_f = [%.2f, %.2f, %.2f] \\times 10^{-3} c$'%(mf, \
             chif[0], chif[1], chif[2], vf[0]*1e3, vf[1]*1e3, vf[2]*1e3))
 
         # draw ellipsoid for BH
-        draw_black_hole(ax, shape_BhC, BhC_traj[:,num-1], chif)
+        draw_black_hole(ax, BH_shapes_holder, 2, shape_BhC, BhC_traj[:,num-1], chif)
 
         for idx in range(len(dataLines_remnant)):
             line = lines[len(dataLines_binary)+idx]
@@ -896,7 +861,7 @@ def update_lines(num, lines, hist_frames, t, t_binary, dataLines_binary, \
             elif idx == 1:
                 line.set_data(t_binary - time_offset, np.imag(h_viewpoint))
             else:
-                line.set_xdata(current_time - time_offset)
+                line.set_xdata([current_time - time_offset])
 
 
     return lines
@@ -909,22 +874,22 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         still_time=None,  rescale_fig_for_widgets=False, \
         no_freeze_near_merger=False, omega_start=None, \
         no_wave_time_series=False, uniform_time_step_size=None, \
-        no_time_label=False, no_surrogate_label=False, \
+        no_time_label=False, \
         use_spin_angular_momentum_for_arrows=False):
-    
+
     #chiA = np.array(chiA)
     #chiB = np.array(chiB)
     #t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
     #    BhB_traj, separation = get_binary_data(q, chiA, chiB, omega_ref, \
     #    omega_start=omega_start, uniform_time_step_size=uniform_time_step_size)
 
-    datapath = '/home/rdb/Documents/Varma Files/Sys2/'
+    datapath = '/home/rdb/Documents/Varma Files/SimulationAnnex/Private/AEI_Eccentric/BBH_SHK_q1_0_0_e01_D16/Lev3'
     t_binary, chiA_nrsur, chiB_nrsur, L, h_nrsur, BhA_traj, \
         BhB_traj, separation = get_binary_data_NR(datapath)
 
-    # Ryan
+    #Plots for debugging
 
-    # exit()
+    #exit()
     """
     P.plot(t_binary)
     P.title('t_binary')
@@ -1065,10 +1030,6 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     shape_BhB = get_BH_shape(mB, chiB)
     shape_BhC = get_BH_shape(mf, chif)
 
-    #print(np.linalg.norm(chif))
-    #print(np.linalg.norm(vf))
-    #print(np.linalg.norm(vf) * 3 * 10**5)
-
     # Will stop plotting waveform after this time
     # long enough for waveform pattern to disappear, taking into account
     # propagation delay
@@ -1091,7 +1052,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     BhC_traj = np.array([tmp*t for tmp in vf])
 
     # Attaching 3D axis to the figure
-    ax = axes3d.Axes3D(fig)
+    ax = fig.add_subplot(projection='3d', computed_zorder=False)
 
     if not no_wave_time_series:
         l, b, w, h = ax.get_position().bounds
@@ -1101,9 +1062,10 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             hax = fig.add_axes([0.135, 0.08, 0.5, 0.17])
             hax.clear()
         else:
-            ax.set_position([l, b + 0.25*h, w, 0.75*h ])
+            ax.set_position([l, b + 0.2*h, w, h])
             # axes to plot waveform time series
-            hax = fig.add_axes([0.135, 0.08, 0.83, 0.17])
+            hax = fig.add_axes([0.12, 0.08, 0.82, 0.17])
+            fig.subplots_adjust(left=-0.2, bottom=0.25, right=1.17, top=1)
 
 
         # estimate maximum of waveform for scale of timeseries
@@ -1141,7 +1103,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
         ticks_pad = 0
         label_pad = 0
 
-    time_text = ax.text2D(0.03, 0.05, '', transform=ax.transAxes, \
+    time_text = ax.text2D(-0.03, 0.05, '', transform=ax.transAxes, \
         fontsize=time_fontsize, zorder=zorder_dict['info_text'])
     properties_text = ax.text2D(0.05, properties_text_yloc, '', \
         transform=ax.transAxes, fontsize=properties_fontsize, \
@@ -1155,6 +1117,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
 
 
     # NOTE: Can't pass empty arrays into 3d version of plot()
+    # We use these to keep track of how many component/binary objects
+    # we need to update in the animation.
     dataLines_binary = [BhA_traj, BhB_traj, 1, 1, 1]
 
     # get wavefrom at viewpoint
@@ -1207,24 +1171,37 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             ]
 
         hax.legend(loc='upper left', ncol=2)
-        hax.set_xlabel('$t\,(M)$', fontsize=label_fontsize)
-        hax.set_ylabel('$h\,r/M$', fontsize=label_fontsize)
+        hax.set_xlabel('$t\\,(M)$', fontsize=label_fontsize)
+        hax.set_ylabel('$h\\,r/M$', fontsize=label_fontsize)
         hax.tick_params(axis='x', which='major', labelsize=ticks_fontsize)
         hax.tick_params(axis='y', which='major', labelsize=ticks_fontsize)
 
+    # We use this to keep track of how many remnant objects we need to update
+    # in the animation.
     dataLines_remnant = [1]
 
+    tmp_pos = np.array([[0,0],[0,0],[0,0]])
+    # These are for plotting the BH shapes (both component and remnant).
+    # These are not in lines because countourf does not have set_data()
+    BH_shapes_holder = [
+        ax.plot_surface(tmp_pos, tmp_pos, tmp_pos, color='k', linewidth=0, alpha=0.9,
+                    zorder=zorder_dict['Bh']), \
+        ax.plot_surface(tmp_pos, tmp_pos, tmp_pos, color='k', linewidth=0, alpha=0.9,
+                    zorder=zorder_dict['Bh']), \
+        ax.plot_surface(tmp_pos, tmp_pos, tmp_pos, color='k', linewidth=0, alpha=0.9,
+            zorder=zorder_dict['Bh']), \
+    ]
 
-    # Setting the axes properties
 
-    # This seems to set the actual limits to max_range
-    ax.set_xlim3d([-max_range*0.96, max_range*0.96])
-    ax.set_ylim3d([-max_range*0.96, max_range*0.96])
-    ax.set_zlim3d([-max_range*0.96, max_range*0.96])
+    ## Setting the axes properties
 
-    ax.set_xlabel('$x\,(M)$', fontsize=label_fontsize)
-    ax.set_ylabel('$y\,(M)$', fontsize=label_fontsize)
-    ax.set_zlabel('$z\,(M)$', fontsize=label_fontsize)
+    ax.set_xlim3d([-max_range, max_range])
+    ax.set_ylim3d([-max_range, max_range])
+    ax.set_zlim3d([-max_range, max_range])
+
+    ax.set_xlabel('$x\\,(M)$', fontsize=label_fontsize)
+    ax.set_ylabel('$y\\,(M)$', fontsize=label_fontsize)
+    ax.set_zlabel('$z\\,(M)$', fontsize=label_fontsize)
 
     ax.xaxis.pane.set_edgecolor('black')
     ax.yaxis.pane.set_edgecolor('black')
@@ -1250,16 +1227,11 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
     ax.yaxis.labelpad = label_pad
     ax.zaxis.labelpad = label_pad -3
 
-    if not no_surrogate_label:
-        ax.set_title('NRSur7dq2 + %s'%fit_name, fontsize=time_fontsize, \
-            x=0.74, y=0.99)
-
     # number of frames to include in orbit trace
     hist_frames = int(0.75*(PTS_PER_ORBIT))
 
     # Will freeze video at this index
     freeze_idx = np.argmin(np.abs(t - FREEZE_TIME))
-
 
     # color range for contourf
     # Get linthresh from first index. With SymLogNorm, whenever the
@@ -1296,7 +1268,8 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             waveform_end_time, freeze_idx, draw_full_trajectory, ax, \
             vmin, vmax, linthresh, camera_traj, height_map, \
             project_on_all_planes, no_wave_time_series, \
-            no_freeze_near_merger, no_time_label, use_Kerr)
+            no_freeze_near_merger, no_time_label, use_Kerr,
+            BH_shapes_holder)
 
     # save still and exit
     if still_time is not None:
@@ -1305,7 +1278,7 @@ def BBH_animation(fig, q, chiA, chiB, omega_ref=None, \
             time_tag = 'm%s'%time_tag
         update_lines(np.argmin(np.abs(t-still_time)), *fargs)
         still_fnametag = '%s_%s'%(save_file.split('.')[0], time_tag)
-        P.savefig('%s.png'%still_fnametag, bbox_inches='tight')
+        P.savefig('%s.png'%still_fnametag, bbox_inches='tight', dpi=300)
         P.savefig('%s.pdf'%still_fnametag, bbox_inches='tight')
         exit()
 
@@ -1406,9 +1379,6 @@ if __name__ == '__main__':
     pp_special.add_argument('--no_time_label', default=False, \
         action='store_true', \
         help='Do not show the current time in the figtext.')
-    pp_special.add_argument('--no_surrogate_label', default=False, \
-        action='store_true', \
-        help='Do not show the surrogate names in the figtext.')
 
     args = parser.parse_args()
     if args.height_map or args.auto_rotate_camera:
@@ -1421,8 +1391,7 @@ if __name__ == '__main__':
         if args.no_wave_time_series:
             fig = P.figure(figsize=(5,4))
         else:
-            fig = P.figure(figsize=(5.1,5.4))
-
+            fig = P.figure(figsize=(5.1,6))
 
     line_ani = BBH_animation(fig, args.q, args.chiA, args.chiB,
         omega_ref = args.omega_ref,
@@ -1437,7 +1406,6 @@ if __name__ == '__main__':
         uniform_time_step_size = args.uniform_time_step_size,
         still_time = args.still_time,
         no_time_label = args.no_time_label,
-        no_surrogate_label = args.no_surrogate_label,
         use_spin_angular_momentum_for_arrows \
                 = args.use_spin_angular_momentum_for_arrows)
 
